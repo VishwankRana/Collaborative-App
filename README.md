@@ -1,16 +1,49 @@
-# React + Vite
+# Collaborative App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time collaborative document editor built with React, Tiptap, Yjs, WebSockets, Express, and MongoDB.
 
-Currently, two official plugins are available:
+This project lets multiple users work inside the same document, see live collaboration cursors and organize multiple documents under their account.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Real-time collaborative editing with Yjs and WebSockets
+- JWT-based authentication with signup and login
+- Role-based access control
+- Roles: `owner`, `editor`, `viewer`
+- Multi-document workspace
+- Share document access by email
+- Owner-managed collaborator permissions
+- Live collaboration cursor UI
+- MongoDB persistence for document content
+- Modern responsive editor UI
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- Frontend: React, Vite, React Router, Tiptap
+- Realtime: Yjs, `y-websocket`, `ws`
+- Backend: Express
+- Database: MongoDB with Mongoose
+- Auth: Custom JWT implementation
+- Styling: CSS + Tailwind
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## How It Works
+
+### Authentication
+
+Users can sign up and log in with email and password. After login, the app stores a JWT and uses it for API requests and WebSocket authorization.
+
+### Access Control
+
+Each document supports three roles:
+
+- `owner`: full control, including renaming, deleting, and sharing access
+- `editor`: can open and edit the document
+- `viewer`: can open the document in read-only mode
+
+### Realtime Collaboration
+
+The editor uses Yjs for shared state and a WebSocket server for live synchronization. Users connected to the same document URL collaborate inside the same room.
+
+### Persistence
+
+Document content is persisted to MongoDB as Yjs state snapshots, so content survives backend restarts.
