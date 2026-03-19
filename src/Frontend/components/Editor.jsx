@@ -1,46 +1,132 @@
-import { useEffect } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useEffect, useMemo, useState } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+
 import StarterKit from "@tiptap/starter-kit";
-import { socket } from "../socket.js";
+import Collaboration from "@tiptap/extension-collaboration";
 
-export default function Editor({ documentId }) {
+import { createProvider } from "../yjs/provider";
+import CollaborationCursor from "../extensions/CollaborationCursor";
+import InlineHeading from "../extensions/InlineHeading";
+import Toolbar from "./Toolbar";
+
+function formatColor(seed) {
+  return `#${(seed & 0xffffff).toString(16).padStart(6, "0")}`;
+}
+
+function createCursorUser(clientId) {
+  return {
+    name: `User ${clientId % 100}`,
+    color: formatColor(clientId * 2654435761),
+  };
+}
+
+function getProviderStatus(provider) {
+  if (provider.synced) return "synced";
+  if (provider.wsconnected) return "connected";
+  if (provider.wsconnecting) return "connecting";
+
+  return "disconnected";
+}
+
+function getStatusLabel(status) {
+  if (status === "synced") return "Live";
+  if (status === "connected") return "Connected";
+  if (status === "connecting") return "Connecting";
+
+  return "Offline";
+}
+
+export default function Editor({ documentId, readOnly = false, userName = "Guest" }) {
+  const { provider, ydoc } = useMemo(() => {
+    return createProvider(documentId);
+  }, [documentId]);
+  const [connectionStatus, setConnectionStatus] = useState(() =>
+    getProviderStatus(provider)
+  );
+
+  useEffect(() => {
+    const handleStatus = ({ status }) => {
+      setConnectionStatus(status);
+    };
+
+    const handleSync = (isSynced) => {
+      setConnectionStatus(isSynced ? "synced" : "connected");
+    };
+
+    const handleConnectionClose = () => {
+      setConnectionStatus(getProviderStatus(provider));
+    };
+
+    const handleConnectionError = () => {
+      setConnectionStatus("disconnected");
+    };
+
+    provider.on("status", handleStatus);
+    provider.on("sync", handleSync);
+    provider.on("connection-close", handleConnectionClose);
+    provider.on("connection-error", handleConnectionError);
+
+    return () => {
+      provider.off("status", handleStatus);
+      provider.off("sync", handleSync);
+      provider.off("connection-close", handleConnectionClose);
+      provider.off("connection-error", handleConnectionError);
+      provider.destroy();
+      ydoc.destroy();
+    };
+  }, [provider, ydoc]);
+
+  const cursorUser = useMemo(() => {
+    return {
+      ...createCursorUser(ydoc.clientID),
+      name: userName,
+    };
+  }, [userName, ydoc]);
+
   const editor = useEditor({
-    extensions: [StarterKit],
-    content: "<p>Loading...</p>",
-  });
+    editable: !readOnly,
+    extensions: [
+      StarterKit.configure({
+        heading: false,
+        undoRedo: false,
+      }),
 
-  useEffect(() => {
-    if (!editor) return;
+      InlineHeading,
 
-    socket.emit("get-document", documentId);
+      Collaboration.configure({
+        document: ydoc,
+      }),
 
-    socket.on("load-document", (data) => {
-      editor.commands.setContent(data);
-    });
-  }, [editor]);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    editor.on("update", () => {
-      const data = editor.getJSON();
-      socket.emit("send-changes", data);
-    });
-  }, [editor]);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    socket.on("receive-changes", (data) => {
-      editor.commands.setContent(data);
-    });
-  }, [editor]);
+      CollaborationCursor.configure({
+        provider: provider,
+        user: cursorUser,
+      }),
+    ],
+  }, [provider, ydoc, cursorUser]);
 
   return (
-    <div className="flex justify-center pt-10 bg-gray-100 min-h-screen">
-      <div className="w-[800px] bg-white shadow-lg p-6 rounded">
-        <EditorContent editor={editor} />
+    <section className="editor-panel">
+      <div className="panel-header">
+        <div>
+          <p className="panel-kicker">Shared document</p>
+          <h2>Focus editor</h2>
+        </div>
+
+        <div className={`status-pill status-${connectionStatus}`}>
+          <span className="status-dot" />
+          {getStatusLabel(connectionStatus)}
+        </div>
       </div>
-    </div>
+
+      <div className="document-meta">
+        <span>Document ID</span>
+        <strong>{documentId}</strong>
+      </div>
+
+      <div className="editor-card">
+        <Toolbar disabled={readOnly} editor={editor} />
+        <EditorContent className="editor-content" key={documentId} editor={editor} />
+      </div>
+    </section>
   );
 }

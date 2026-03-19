@@ -5,20 +5,29 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node src/Backend/Server.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tiptap/react": "^3.20.1",
-    "@tiptap/starter-kit": "^3.20.1",
+    "@tiptap/extension-collaboration": "^3.20.2",
+    "@tiptap/extension-collaboration-cursor": "^3.0.0",
+    "@tiptap/react": "^3.20.2",
+    "@tiptap/starter-kit": "^3.20.2",
+    "@y/websocket-server": "^0.1.5",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "mongoose": "^9.3.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "ws": "^8.19.0",
+    "y-mongodb-provider": "^0.2.1",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.30"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

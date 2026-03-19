@@ -1,29 +1,417 @@
+import http from "http";
 import express from "express";
-import { createServer } from "http";
-import { connect } from "mongoose";
 import cors from "cors";
-import { Server } from "socket.io";
-import socketHandler from "./socket/socketHandler";
+import { WebSocketServer } from "ws";
+import { setPersistence, setupWSConnection } from "@y/websocket-server/utils";
+
+import { connectDB } from "./db.js";
+import { getBearerToken, hashPassword, signToken, verifyPassword, verifyToken } from "./auth.js";
+import { canEditDocument, getUserRole, serializeCollaborator } from "./documents.js";
+import User from "./models/User.js";
+import Document from "./models/Document.js";
+import DocumentContent from "./models/DocumentContent.js";
+import * as Y from "../../node_modules/@y/websocket-server/node_modules/yjs/src/index.js";
+
+const PORT = Number(process.env.PORT || 1234);
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
+async function persistDocumentState(docId, ydoc) {
+  const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
+
+  await DocumentContent.findOneAndUpdate(
+    { docId },
+    { docId, yjsState: state },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+}
+
 app.use(cors());
+app.use(express.json());
 
-connect("mongodb://127.0.0.1:27017/collabDocs", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+setPersistence({
+  provider: {
+    name: "mongodb",
+  },
+  async bindState(docId, ydoc) {
+    const savedContent = await DocumentContent.findOne({ docId });
 
-const server = createServer(app);
+    if (savedContent?.yjsState?.length) {
+      Y.applyUpdate(ydoc, new Uint8Array(savedContent.yjsState));
+    }
 
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+    ydoc.on("update", async () => {
+      try {
+        await persistDocumentState(docId, ydoc);
+      } catch (error) {
+        console.error(`Failed to persist document ${docId}:`, error);
+      }
+    });
+  },
+  async writeState(docId, ydoc) {
+    await persistDocumentState(docId, ydoc);
   },
 });
 
-socketHandler(io);
+function getTokenFromRequest(request) {
+  return getBearerToken(request.headers.authorization || "");
+}
 
-server.listen(5000, () => {
-  console.log("Server running on port 5000");
+async function authenticateRequest(request, response, next) {
+  try {
+    const token = getTokenFromRequest(request);
+    const payload = verifyToken(token);
+    const user = await User.findById(payload.sub);
+
+    if (!user) {
+      response.status(401).json({ message: "Authentication required." });
+      return;
+    }
+
+    request.user = user;
+    next();
+  } catch {
+    response.status(401).json({ message: "Authentication required." });
+  }
+}
+
+function createAuthResponse(user) {
+  const safeUser = {
+    id: String(user._id),
+    name: user.name,
+    email: user.email,
+  };
+
+  return {
+    token: signToken({
+      sub: safeUser.id,
+      name: safeUser.name,
+      email: safeUser.email,
+    }),
+    user: safeUser,
+  };
+}
+
+function createDocumentTitle(docId) {
+  if (docId.endsWith("-default-document")) {
+    return "Default Document";
+  }
+
+  return docId
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+async function getOrCreateDocument(docId, user) {
+  let document = await Document.findOne({ docId }).populate("owner", "name email");
+
+  if (!document) {
+    document = await Document.create({
+      docId,
+      title: createDocumentTitle(docId) || "Untitled Document",
+      owner: user._id,
+      collaborators: [],
+    });
+
+    document = await Document.findById(document._id).populate("owner", "name email");
+  }
+
+  return document;
+}
+
+function serializeDocument(document, role) {
+  return {
+    id: String(document._id),
+    docId: document.docId,
+    title: document.title,
+    role,
+    owner: {
+      id: String(document.owner._id),
+      name: document.owner.name,
+      email: document.owner.email,
+    },
+  };
+}
+
+app.get("/api/health", (_request, response) => {
+  response.json({ ok: true });
+});
+
+app.post("/api/auth/signup", async (request, response) => {
+  try {
+    const { name, email, password } = request.body;
+
+    if (!name?.trim() || !email?.trim() || !password?.trim()) {
+      response.status(400).json({ message: "Name, email, and password are required." });
+      return;
+    }
+
+    const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+
+    if (existingUser) {
+      response.status(409).json({ message: "An account with this email already exists." });
+      return;
+    }
+
+    const user = await User.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      passwordHash: await hashPassword(password),
+    });
+
+    response.status(201).json(createAuthResponse(user));
+  } catch (error) {
+    response.status(500).json({ message: "Unable to create account.", detail: error.message });
+  }
+});
+
+app.post("/api/auth/login", async (request, response) => {
+  try {
+    const { email, password } = request.body;
+    const user = await User.findOne({ email: email?.trim().toLowerCase() });
+
+    if (!user || !(await verifyPassword(password || "", user.passwordHash))) {
+      response.status(401).json({ message: "Invalid email or password." });
+      return;
+    }
+
+    response.json(createAuthResponse(user));
+  } catch (error) {
+    response.status(500).json({ message: "Unable to login.", detail: error.message });
+  }
+});
+
+app.get("/api/auth/me", authenticateRequest, async (request, response) => {
+  response.json({
+    user: {
+      id: String(request.user._id),
+      name: request.user.name,
+      email: request.user.email,
+    },
+  });
+});
+
+app.get("/api/documents", authenticateRequest, async (request, response) => {
+  const userId = String(request.user._id);
+  const documents = await Document.find({
+    $or: [{ owner: userId }, { "collaborators.user": userId }],
+  })
+    .populate("owner", "name email")
+    .sort({ updatedAt: -1 });
+
+  response.json({
+    documents: documents.map((document) =>
+      serializeDocument(document, getUserRole(document, userId))
+    ),
+  });
+});
+
+app.post("/api/documents", authenticateRequest, async (request, response) => {
+  const rawTitle = request.body.title?.trim() || "Untitled Document";
+  const slug = rawTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  const docId = `${slug || "document"}-${Date.now()}`;
+
+  const document = await Document.create({
+    docId,
+    title: rawTitle,
+    owner: request.user._id,
+    collaborators: [],
+  });
+
+  const populatedDocument = await Document.findById(document._id).populate(
+    "owner",
+    "name email"
+  );
+
+  response.status(201).json({
+    document: serializeDocument(populatedDocument, "owner"),
+  });
+});
+
+app.delete(
+  "/api/documents/:docId",
+  authenticateRequest,
+  async (request, response) => {
+    const document = await Document.findOne({ docId: request.params.docId }).populate(
+      "owner",
+      "name email"
+    );
+
+    if (!document) {
+      response.status(404).json({ message: "Document not found." });
+      return;
+    }
+
+    if (getUserRole(document, request.user._id) !== "owner") {
+      response.status(403).json({ message: "Only the owner can delete this document." });
+      return;
+    }
+
+    await Document.deleteOne({ _id: document._id });
+    await DocumentContent.deleteOne({ docId: document.docId });
+
+    response.json({ message: "Document deleted." });
+  }
+);
+
+app.patch(
+  "/api/documents/:docId",
+  authenticateRequest,
+  async (request, response) => {
+    const document = await Document.findOne({ docId: request.params.docId }).populate(
+      "owner",
+      "name email"
+    );
+
+    if (!document) {
+      response.status(404).json({ message: "Document not found." });
+      return;
+    }
+
+    if (getUserRole(document, request.user._id) !== "owner") {
+      response.status(403).json({ message: "Only the owner can rename this document." });
+      return;
+    }
+
+    const title = request.body.title?.trim();
+
+    if (!title) {
+      response.status(400).json({ message: "A document title is required." });
+      return;
+    }
+
+    document.title = title;
+    await document.save();
+
+    response.json({
+      document: serializeDocument(document, "owner"),
+    });
+  }
+);
+
+app.get("/api/documents/:docId", authenticateRequest, async (request, response) => {
+  const document = await getOrCreateDocument(request.params.docId, request.user);
+  const role = getUserRole(document, request.user._id);
+
+  if (!role) {
+    response.status(403).json({ message: "You do not have access to this document." });
+    return;
+  }
+
+  await document.populate("collaborators.user", "name email");
+
+  response.json({
+    document: serializeDocument(document, role),
+    permissions: {
+      canEdit: canEditDocument(role),
+      canManageAccess: role === "owner",
+    },
+    collaborators: document.collaborators.map(serializeCollaborator),
+  });
+});
+
+app.patch(
+  "/api/documents/:docId/access",
+  authenticateRequest,
+  async (request, response) => {
+    const { email, role } = request.body;
+    const document = await Document.findOne({ docId: request.params.docId }).populate(
+      "owner",
+      "name email"
+    );
+
+    if (!document) {
+      response.status(404).json({ message: "Document not found." });
+      return;
+    }
+
+    if (getUserRole(document, request.user._id) !== "owner") {
+      response.status(403).json({ message: "Only the owner can manage access." });
+      return;
+    }
+
+    if (!email?.trim() || !["editor", "viewer"].includes(role)) {
+      response.status(400).json({ message: "Valid email and role are required." });
+      return;
+    }
+
+    const invitedUser = await User.findOne({ email: email.trim().toLowerCase() });
+
+    if (!invitedUser) {
+      response.status(404).json({ message: "No user found with that email." });
+      return;
+    }
+
+    if (String(document.owner._id) === String(invitedUser._id)) {
+      response.status(400).json({ message: "The owner already has full access." });
+      return;
+    }
+
+    const existingCollaborator = document.collaborators.find((collaborator) => {
+      return String(collaborator.user) === String(invitedUser._id);
+    });
+
+    if (existingCollaborator) {
+      existingCollaborator.role = role;
+    } else {
+      document.collaborators.push({
+        user: invitedUser._id,
+        role,
+      });
+    }
+
+    await document.save();
+    await document.populate("collaborators.user", "name email");
+
+    response.json({
+      collaborators: document.collaborators.map(serializeCollaborator),
+    });
+  }
+);
+
+wss.on("connection", async (conn, req) => {
+  try {
+    const requestUrl = new URL(req.url || "/", `http://${req.headers.host}`);
+    const docId = requestUrl.pathname.slice(1);
+    const token = requestUrl.searchParams.get("token");
+    const payload = verifyToken(token);
+    const user = await User.findById(payload.sub);
+
+    if (!user) {
+      conn.close(1008, "Unauthorized");
+      return;
+    }
+
+    const document = await Document.findOne({ docId });
+
+    if (!document || !getUserRole(document, user._id)) {
+      conn.close(1008, "Forbidden");
+      return;
+    }
+
+    setupWSConnection(conn, req);
+  } catch {
+    conn.close(1008, "Unauthorized");
+  }
+});
+
+async function startServer() {
+  await connectDB();
+
+  server.listen(PORT, () => {
+    console.log("API and Yjs WebSocket server running on port", PORT);
+  });
+}
+
+startServer().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });
