@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 const TOKEN_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
-const TOKEN_LIFETIME_MS = 1000 * 60 * 60 * 24 * 7;
+const TOKEN_LIFETIME_MS = 1000 * 60 * 60 * 24;
 
 function toBase64Url(value) {
   return Buffer.from(value)

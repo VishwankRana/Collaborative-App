@@ -6,16 +6,16 @@
 
 :root {
   color-scheme: light;
-  --bg: #f6f1e8;
-  --bg-accent: #efe3d2;
-  --surface: rgba(255, 252, 247, 0.78);
-  --surface-strong: #fffdf9;
-  --surface-border: rgba(88, 64, 43, 0.12);
-  --text: #2f241d;
-  --muted: #7d6957;
-  --accent: #c66a3d;
-  --accent-strong: #9f4c24;
-  --shadow: 0 24px 70px rgba(92, 64, 38, 0.12);
+  --bg: #edf6fb;
+  --bg-accent: #dcecf6;
+  --surface: rgba(249, 253, 255, 0.8);
+  --surface-strong: #ffffff;
+  --surface-border: rgba(44, 78, 104, 0.12);
+  --text: #183247;
+  --muted: #5f7990;
+  --accent: #2c7da0;
+  --accent-strong: #1f5f7a;
+  --shadow: 0 24px 70px rgba(34, 71, 97, 0.12);
 }
 
 * {
@@ -39,7 +39,7 @@ body {
     ),
     radial-gradient(
       circle at top right,
-      rgba(198, 106, 61, 0.16),
+      rgba(44, 125, 160, 0.16),
       transparent 24%
     ),
     linear-gradient(135deg, var(--bg) 0%, var(--bg-accent) 100%);
@@ -87,7 +87,7 @@ textarea {
 .eyebrow,
 .panel-kicker {
   margin: 0 0 10px;
-  color: #da7853;
+  color: #4d95b8;
   letter-spacing: 0.14em;
   font-size: 12px;
   font-weight: 800;
@@ -155,14 +155,14 @@ textarea {
   padding: 14px 18px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.68);
-  border: 1px solid rgba(88, 64, 43, 0.08);
-  color: #da7853;
+  border: 1px solid rgba(44, 78, 104, 0.08);
+  color: #4d95b8;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .hero-link-button {
-  border: 1px solid rgba(88, 64, 43, 0.1);
+  border: 1px solid rgba(44, 78, 104, 0.1);
   background: rgba(255, 255, 255, 0.9);
   color: var(--accent-strong);
   padding: 12px 16px;
@@ -179,14 +179,14 @@ textarea {
 
 .hero-link-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(159, 76, 36, 0.28);
+  border-color: rgba(31, 95, 122, 0.28);
   background: rgba(255, 255, 255, 1);
 }
 
 .hero-logout-button {
-  border: 1px solid rgba(203, 84, 68, 0.18);
+  border: 1px solid rgba(44, 78, 104, 0.1);
   background: rgba(255, 255, 255, 0.9);
-  color: #b24537;
+  color: var(--accent-strong);
   padding: 12px 16px;
   border-radius: 999px;
   font-size: 13px;
@@ -201,24 +201,34 @@ textarea {
 
 .hero-logout-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(178, 69, 55, 0.32);
+  border-color: rgba(31, 95, 122, 0.28);
   background: rgba(255, 255, 255, 1);
 }
 
 .hero-delete-button {
-  border: 1px solid rgba(178, 69, 55, 0.18);
+  border: 1px solid rgba(44, 78, 104, 0.1);
   background: rgba(255, 255, 255, 0.9);
-  color: #b24537;
+  color: var(--accent-strong);
   padding: 12px 16px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.hero-delete-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(31, 95, 122, 0.28);
+  background: rgba(255, 255, 255, 1);
 }
 
 .hero-cancel-button {
-  border: 1px solid rgba(88, 64, 43, 0.12);
+  border: 1px solid rgba(44, 78, 104, 0.12);
   background: rgba(255, 255, 255, 0.9);
   color: var(--muted);
   padding: 12px 16px;
@@ -274,7 +284,7 @@ textarea {
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(88, 64, 43, 0.08);
+  border: 1px solid rgba(44, 78, 104, 0.08);
   font-size: 14px;
   font-weight: 700;
 }
@@ -283,7 +293,7 @@ textarea {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: #8f8b84;
+  background: #8797a5;
 }
 
 .status-synced .status-dot,
@@ -318,7 +328,7 @@ textarea {
   flex: 1;
   overflow: hidden;
   border-radius: 24px;
-  border: 1px solid rgba(88, 64, 43, 0.08);
+  border: 1px solid rgba(44, 78, 104, 0.08);
   background: var(--surface-strong);
 }
 
@@ -327,17 +337,17 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   padding: 16px;
-  border-bottom: 1px solid rgba(88, 64, 43, 0.08);
+  border-bottom: 1px solid rgba(44, 78, 104, 0.08);
   background: linear-gradient(
     180deg,
-    rgba(248, 242, 234, 0.95),
-    rgba(255, 253, 249, 0.9)
+    rgba(237, 246, 251, 0.95),
+    rgba(255, 255, 255, 0.9)
   );
 }
 
 .toolbar-button {
   appearance: none;
-  border: 1px solid rgba(88, 64, 43, 0.1);
+  border: 1px solid rgba(44, 78, 104, 0.1);
   background: rgba(255, 255, 255, 0.88);
   color: var(--text);
   padding: 10px 14px;
@@ -352,7 +362,7 @@ textarea {
 
 .toolbar-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(159, 76, 36, 0.3);
+  border-color: rgba(31, 95, 122, 0.3);
 }
 
 .toolbar-button.active {
@@ -434,7 +444,7 @@ textarea {
 
 .editor-content .tiptap p.is-editor-empty:first-child::before {
   content: "Start writing your shared notes here...";
-  color: #b4a08d;
+  color: #91a8bb;
   pointer-events: none;
   float: left;
   height: 0;
@@ -459,8 +469,8 @@ textarea {
   padding: 6px 10px 6px 8px;
   border-radius: 999px;
   box-shadow:
-    0 14px 26px rgba(47, 36, 29, 0.16),
-    0 2px 6px rgba(47, 36, 29, 0.08);
+    0 14px 26px rgba(24, 50, 71, 0.16),
+    0 2px 6px rgba(24, 50, 71, 0.08);
   white-space: nowrap;
   transform-origin: left bottom;
   animation: collaboration-cursor-pop 180ms ease-out;
@@ -540,7 +550,7 @@ textarea {
   width: 100%;
   padding: 10px;
   border-radius: 22px;
-  border: 1px solid rgba(88, 64, 43, 0.08);
+  border: 1px solid rgba(44, 78, 104, 0.08);
   background: rgba(255, 255, 255, 0.74);
 }
 
@@ -563,12 +573,12 @@ textarea {
 
 .document-link:hover {
   transform: translateY(-1px);
-  border-color: rgba(159, 76, 36, 0.24);
+  border-color: rgba(31, 95, 122, 0.24);
 }
 
 .document-link.active {
-  border-color: rgba(159, 76, 36, 0.35);
-  background: rgba(255, 248, 241, 0.95);
+  border-color: rgba(31, 95, 122, 0.35);
+  background: rgba(239, 247, 252, 0.95);
 }
 
 .document-link strong {
@@ -589,7 +599,7 @@ textarea {
   align-items: center;
   padding: 16px 18px;
   border-radius: 22px;
-  border: 1px solid rgba(88, 64, 43, 0.08);
+  border: 1px solid rgba(44, 78, 104, 0.08);
   background: rgba(255, 255, 255, 0.74);
 }
 
@@ -615,18 +625,18 @@ textarea {
 }
 
 .role-owner {
-  background: rgba(198, 106, 61, 0.14);
+  background: rgba(44, 125, 160, 0.14);
   color: var(--accent-strong);
 }
 
 .role-editor {
-  background: rgba(46, 155, 98, 0.14);
-  color: #1e7a4d;
+  background: rgba(54, 179, 126, 0.14);
+  color: #217a58;
 }
 
 .role-viewer {
-  background: rgba(72, 115, 190, 0.14);
-  color: #3155a3;
+  background: rgba(122, 138, 210, 0.14);
+  color: #4f5fb0;
 }
 
 .access-form {
@@ -639,7 +649,7 @@ textarea {
   width: 100%;
   padding: 14px 16px;
   border-radius: 18px;
-  border: 1px solid rgba(88, 64, 43, 0.1);
+  border: 1px solid rgba(44, 78, 104, 0.1);
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
   outline: none;
@@ -660,7 +670,7 @@ textarea {
   border-radius: 18px;
   background: linear-gradient(
     135deg,
-    rgba(198, 106, 61, 0.14),
+    rgba(44, 125, 160, 0.14),
     rgba(255, 255, 255, 0.65)
   );
   color: var(--accent-strong);
@@ -678,15 +688,15 @@ textarea {
   resize: vertical;
   padding: 16px 18px;
   border-radius: 20px;
-  border: 1px solid rgba(88, 64, 43, 0.1);
+  border: 1px solid rgba(44, 78, 104, 0.1);
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
   outline: none;
 }
 
 .comment-input:focus {
-  border-color: rgba(159, 76, 36, 0.4);
-  box-shadow: 0 0 0 4px rgba(198, 106, 61, 0.12);
+  border-color: rgba(31, 95, 122, 0.4);
+  box-shadow: 0 0 0 4px rgba(44, 125, 160, 0.12);
 }
 
 .comment-submit {
@@ -694,10 +704,10 @@ textarea {
   border: 0;
   padding: 12px 18px;
   border-radius: 999px;
-  background: #da7853;
+  background: #4d95b8;
   color: white;
   font-weight: 800;
-  box-shadow: 0 18px 32px rgba(159, 76, 36, 0.18);
+  box-shadow: 0 18px 32px rgba(31, 95, 122, 0.18);
 }
 
 .comment-list {
@@ -711,7 +721,7 @@ textarea {
 .comment-empty,
 .comment-card {
   border-radius: 22px;
-  border: 1px solid rgba(88, 64, 43, 0.08);
+  border: 1px solid rgba(44, 78, 104, 0.08);
   background: rgba(255, 255, 255, 0.74);
   padding: 18px;
 }
