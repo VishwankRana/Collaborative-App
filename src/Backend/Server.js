@@ -13,6 +13,7 @@ import DocumentContent from "./models/DocumentContent.js";
 import * as Y from "../../node_modules/@y/websocket-server/node_modules/yjs/src/index.js";
 
 const PORT = Number(process.env.PORT || 1234);
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
 const app = express();
 const server = http.createServer(app);
@@ -28,7 +29,11 @@ async function persistDocumentState(docId, ydoc) {
   );
 }
 
-app.use(cors());
+app.use(
+  cors({
+    origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN,
+  })
+);
 app.use(express.json());
 
 setPersistence({

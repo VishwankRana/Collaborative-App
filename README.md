@@ -47,3 +47,14 @@ The editor uses Yjs for shared state and a WebSocket server for live synchroniza
 ### Persistence
 
 Document content is persisted to MongoDB as Yjs state snapshots, so content survives backend restarts.
+
+## Environment Variables
+
+Create a `.env` file in the project root.
+
+- `PORT`: backend server port
+- `MONGODB_URI`: MongoDB connection string
+- `JWT_SECRET`: secret used to sign auth tokens
+- `CORS_ORIGIN`: allowed frontend origin for API requests, or `*` for local development
+- `VITE_API_BASE_URL`: frontend API base URL
+- `VITE_COLLAB_SERVER_URL`: frontend WebSocket server URL for Yjs collaboration

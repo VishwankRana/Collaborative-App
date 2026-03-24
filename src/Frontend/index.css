@@ -51,7 +51,8 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -113,6 +114,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
+  width: 100%;
 }
 
 .hero-actions {
@@ -131,6 +133,7 @@ textarea {
 
 .hero-rename-input {
   min-width: 280px;
+  width: min(100%, 420px);
 }
 
 .hero-copy,
@@ -271,6 +274,7 @@ textarea {
   justify-content: space-between;
   gap: 16px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .panel-header h2 {
@@ -571,6 +575,11 @@ textarea {
     background 160ms ease;
 }
 
+.document-link-main > div {
+  min-width: 0;
+  flex: 1;
+}
+
 .document-link:hover {
   transform: translateY(-1px);
   border-color: rgba(31, 95, 122, 0.24);
@@ -583,6 +592,7 @@ textarea {
 
 .document-link strong {
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .document-link p {
@@ -603,6 +613,10 @@ textarea {
   background: rgba(255, 255, 255, 0.74);
 }
 
+.access-card > div {
+  min-width: 0;
+}
+
 .access-card strong {
   display: block;
 }
@@ -611,6 +625,7 @@ textarea {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .role-pill {
@@ -686,6 +701,7 @@ textarea {
 .comment-input {
   width: 100%;
   resize: vertical;
+  max-width: 100%;
   padding: 16px 18px;
   border-radius: 20px;
   border: 1px solid rgba(44, 78, 104, 0.1);
@@ -803,6 +819,10 @@ textarea {
   .hero-headline-row {
     flex-wrap: wrap;
   }
+
+  .hero-actions {
+    width: 100%;
+  }
 }
 
 @media (max-width: 640px) {
@@ -814,9 +834,50 @@ textarea {
 
   .hero-panel,
   .editor-panel,
-  .comments-panel {
+  .comments-panel,
+  .access-panel,
+  .auth-card {
     border-radius: 22px;
     padding: 18px;
+  }
+
+  .hero-headline-row,
+  .hero-actions,
+  .hero-rename-form,
+  .panel-header,
+  .access-card,
+  .document-link-main,
+  .comment-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-chip {
+    width: 100%;
+    white-space: normal;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hero-link-button,
+  .hero-logout-button,
+  .hero-delete-button,
+  .hero-cancel-button,
+  .comment-submit {
+    width: 100%;
+    justify-self: stretch;
+    text-align: center;
+  }
+
+  .hero-rename-input,
+  .comment-input,
+  .role-select {
+    min-width: 0;
+  }
+
+  .comment-count,
+  .status-pill {
+    align-self: flex-start;
   }
 
   .editor-content .tiptap {
