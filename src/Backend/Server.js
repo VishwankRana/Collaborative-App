@@ -10,7 +10,7 @@ import { canEditDocument, getUserRole, serializeCollaborator } from "./documents
 import User from "./models/User.js";
 import Document from "./models/Document.js";
 import DocumentContent from "./models/DocumentContent.js";
-import * as Y from "../../node_modules/@y/websocket-server/node_modules/yjs/src/index.js";
+import * as Y from "yjs";
 
 const PORT = Number(process.env.PORT || 1234);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
