@@ -10,7 +10,6 @@ import { canEditDocument, getUserRole, serializeCollaborator } from "./documents
 import User from "./models/User.js";
 import Document from "./models/Document.js";
 import DocumentContent from "./models/DocumentContent.js";
-import * as Y from "yjs";
 
 const PORT = Number(process.env.PORT || 1234);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
@@ -20,7 +19,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 async function persistDocumentState(docId, ydoc) {
-  const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
+  const state = Buffer.from(ydoc.encodeStateAsUpdate());
 
   await DocumentContent.findOneAndUpdate(
     { docId },
@@ -44,7 +43,7 @@ setPersistence({
     const savedContent = await DocumentContent.findOne({ docId });
 
     if (savedContent?.yjsState?.length) {
-      Y.applyUpdate(ydoc, new Uint8Array(savedContent.yjsState));
+      ydoc.applyUpdate(new Uint8Array(savedContent.yjsState));
     }
 
     ydoc.on("update", async () => {
