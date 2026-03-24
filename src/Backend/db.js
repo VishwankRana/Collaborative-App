@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb+srv://vishwankrana2005_db_user:E7OR0kO7GJuMOEr@collabsphere-prod.6nx7dfl.mongodb.net/?appName=collabsphere-prod";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 export async function connectDB() {
   try {
+    if (!MONGODB_URI) {
+      throw new Error("MONGODB_URI is not set. Add it to your .env file.");
+    }
+
     await mongoose.connect(MONGODB_URI);
     console.log("MongoDB connected");
   } catch (error) {
