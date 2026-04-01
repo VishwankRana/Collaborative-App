@@ -17,14 +17,15 @@ import DocumentContent from "./models/DocumentContent.js";
 dotenv.config();
 
 const PORT = Number(process.env.PORT || 1234);
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const CORS_ORIGIN =
+  process.env.CORS_ORIGIN || "https://collabsphere.vercel.app";
 const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const corsOptions = {
-  origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN,
+  origin: CORS_ORIGIN,
   credentials: true,
 };
 
@@ -47,9 +48,16 @@ app.get("/health", (_request, response) => {
 });
 
 app.use("/api", (request, response, next) => {
-  if (request.path === "/health" || isDatabaseConnected()) {
-    next();
-    return;
+  if (request.method === "OPTIONS") {
+    return next();
+  }
+
+  if (request.path === "/health") {
+    return next();
+  }
+
+  if (isDatabaseConnected()) {
+    return next();
   }
 
   response.status(503).json({
