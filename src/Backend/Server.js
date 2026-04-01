@@ -1,25 +1,31 @@
 import http from "http";
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
-import { setPersistence, setupWSConnection } from "@y/websocket-server/utils";
+import * as Y from "yjs";
+import { setPersistence, setupWSConnection } from "./yjsServerUtils.js";
 
-import { connectDB } from "./db.js";
+import { connectDB, getDatabaseStatus, isDatabaseConnected } from "./db.js";
 import { getBearerToken, hashPassword, signToken, verifyPassword, verifyToken } from "./auth.js";
 import { canEditDocument, getUserRole, serializeCollaborator } from "./documents.js";
 import User from "./models/User.js";
 import Document from "./models/Document.js";
 import DocumentContent from "./models/DocumentContent.js";
 
+// process.loadEnvFile?.(".env");
+dotenv.config();
+
 const PORT = Number(process.env.PORT || 1234);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 async function persistDocumentState(docId, ydoc) {
-  const state = Buffer.from(ydoc.encodeStateAsUpdate());
+  const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
 
   await DocumentContent.findOneAndUpdate(
     { docId },
@@ -35,6 +41,18 @@ app.use(
 );
 app.use(express.json());
 
+app.use("/api", (request, response, next) => {
+  if (request.path === "/health" || isDatabaseConnected()) {
+    next();
+    return;
+  }
+
+  response.status(503).json({
+    message: "Database is unavailable.",
+    detail: getDatabaseStatus().error,
+  });
+});
+
 setPersistence({
   provider: {
     name: "mongodb",
@@ -43,7 +61,7 @@ setPersistence({
     const savedContent = await DocumentContent.findOne({ docId });
 
     if (savedContent?.yjsState?.length) {
-      ydoc.applyUpdate(new Uint8Array(savedContent.yjsState));
+      Y.applyUpdate(ydoc, new Uint8Array(savedContent.yjsState));
     }
 
     ydoc.on("update", async () => {
@@ -142,7 +160,14 @@ function serializeDocument(document, role) {
 }
 
 app.get("/api/health", (_request, response) => {
-  response.json({ ok: true });
+  response.json({
+    ok: true,
+    database: {
+      connected: isDatabaseConnected(),
+      required: !ALLOW_START_WITHOUT_DB,
+      error: getDatabaseStatus().error,
+    },
+  });
 });
 
 app.post("/api/auth/signup", async (request, response) => {
@@ -383,6 +408,11 @@ app.patch(
 
 wss.on("connection", async (conn, req) => {
   try {
+    if (!isDatabaseConnected()) {
+      conn.close(1013, "Database unavailable");
+      return;
+    }
+
     const requestUrl = new URL(req.url || "/", `http://${req.headers.host}`);
     const docId = requestUrl.pathname.slice(1);
     const token = requestUrl.searchParams.get("token");
@@ -408,10 +438,22 @@ wss.on("connection", async (conn, req) => {
 });
 
 async function startServer() {
-  await connectDB();
+  try {
+    await connectDB();
+  } catch (error) {
+    if (!ALLOW_START_WITHOUT_DB) {
+      throw error;
+    }
+
+    console.warn("Starting server without database connectivity.");
+  }
 
   server.listen(PORT, () => {
-    console.log("API and Yjs WebSocket server running on port", PORT);
+    console.log(
+      `API and Yjs WebSocket server running on port ${PORT}${
+        isDatabaseConnected() ? "" : " (database unavailable)"
+      }`
+    );
   });
 }
 

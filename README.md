@@ -53,8 +53,34 @@ Document content is persisted to MongoDB as Yjs state snapshots, so content surv
 Create a `.env` file in the project root.
 
 - `PORT`: backend server port
-- `MONGODB_URI`: MongoDB connection string
+- `MONGO_URI` or `MONGODB_URI`: MongoDB connection string
 - `JWT_SECRET`: secret used to sign auth tokens
 - `CORS_ORIGIN`: allowed frontend origin for API requests, or `*` for local development
 - `VITE_API_BASE_URL`: frontend API base URL
 - `VITE_COLLAB_SERVER_URL`: frontend WebSocket server URL for Yjs collaboration
+- `ALLOW_START_WITHOUT_DB`: optional, set to `true` to boot the server in degraded local-dev mode when MongoDB is unavailable
+
+## Localhost Setup
+
+For local development, use these values:
+
+```env
+PORT=1234
+MONGO_URI=mongodb://127.0.0.1:27017/collab-editor
+JWT_SECRET=dev-secret-change-me
+CORS_ORIGIN=http://localhost:5173
+VITE_API_BASE_URL=http://localhost:1234
+VITE_COLLAB_SERVER_URL=ws://localhost:1234
+```
+
+Run the backend and frontend in separate terminals:
+
+```bash
+npm run server
+```
+
+```bash
+npm run dev
+```
+
+Then open `http://localhost:5173`.

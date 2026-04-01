@@ -1,7 +1,10 @@
 import crypto from "crypto";
 
-const TOKEN_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const TOKEN_LIFETIME_MS = 1000 * 60 * 60 * 24;
+
+function getTokenSecret() {
+  return process.env.JWT_SECRET || "dev-secret-change-me";
+}
 
 function toBase64Url(value) {
   return Buffer.from(value)
@@ -61,7 +64,7 @@ export function signToken(payload) {
   const exp = Date.now() + TOKEN_LIFETIME_MS;
   const body = toBase64Url(JSON.stringify({ ...payload, exp }));
   const signature = crypto
-    .createHmac("sha256", TOKEN_SECRET)
+    .createHmac("sha256", getTokenSecret())
     .update(`${header}.${body}`)
     .digest("base64")
     .replace(/\+/g, "-")
@@ -83,7 +86,7 @@ export function verifyToken(token) {
   }
 
   const expectedSignature = crypto
-    .createHmac("sha256", TOKEN_SECRET)
+    .createHmac("sha256", getTokenSecret())
     .update(`${header}.${body}`)
     .digest("base64")
     .replace(/\+/g, "-")
