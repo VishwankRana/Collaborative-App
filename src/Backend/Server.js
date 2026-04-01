@@ -41,6 +41,10 @@ app.use(
 );
 app.use(express.json());
 
+app.get("/health", (_request, response) => {
+  response.send("OK");
+});
+
 app.use("/api", (request, response, next) => {
   if (request.path === "/health" || isDatabaseConnected()) {
     next();
