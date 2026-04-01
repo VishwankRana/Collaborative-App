@@ -23,6 +23,10 @@ const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
+const corsOptions = {
+  origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN,
+  credentials: true,
+};
 
 async function persistDocumentState(docId, ydoc) {
   const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
@@ -34,11 +38,8 @@ async function persistDocumentState(docId, ydoc) {
   );
 }
 
-app.use(
-  cors({
-    origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN,
-  })
-);
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 app.get("/health", (_request, response) => {
