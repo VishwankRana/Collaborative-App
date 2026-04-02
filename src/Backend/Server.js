@@ -17,18 +17,12 @@ import DocumentContent from "./models/DocumentContent.js";
 dotenv.config();
 
 const PORT = Number(process.env.PORT || 1234);
-const CORS_ORIGIN =
-  process.env.CORS_ORIGIN || "https://colllabsphere.vercel.app";
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-// const corsOptions = {
-//   origin: CORS_ORIGIN,
-//   credentials: true,
-// };
-
 const corsOptions = {
   origin: CORS_ORIGIN,
   credentials: true,
