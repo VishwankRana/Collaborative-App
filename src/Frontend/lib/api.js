@@ -25,6 +25,8 @@ export async function apiRequest(path, { method = "GET", token, body } = {}) {
     }
   }
 
+  console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
   if (!response.ok) {
     throw new Error(data.message || "Request failed.");
   }
