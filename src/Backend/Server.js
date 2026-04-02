@@ -37,7 +37,7 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.options(/.*/, cors());
+app.options("*", cors());
 app.use(express.json());
 
 app.get("/health", (_request, response) => {
@@ -46,7 +46,7 @@ app.get("/health", (_request, response) => {
 
 app.use("/api", (request, response, next) => {
   if (request.method === "OPTIONS") {
-    return next();
+    return response.sendStatus(200);
   }
 
   if (request.path === "/health") {
