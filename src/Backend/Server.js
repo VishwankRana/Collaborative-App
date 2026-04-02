@@ -37,6 +37,7 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
+app.options("*", cors());
 app.use(express.json());
 
 app.get("/health", (_request, response) => {
