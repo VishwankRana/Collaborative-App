@@ -17,18 +17,11 @@ import DocumentContent from "./models/DocumentContent.js";
 dotenv.config();
 
 const PORT = Number(process.env.PORT || 1234);
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:5173";
 const ALLOW_START_WITHOUT_DB = process.env.ALLOW_START_WITHOUT_DB === "true";
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-const corsOptions = {
-  origin: CORS_ORIGIN,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
 
 async function persistDocumentState(docId, ydoc) {
   const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
@@ -40,8 +33,11 @@ async function persistDocumentState(docId, ydoc) {
   );
 }
 
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+app.options(/.*/, cors());
 app.use(express.json());
 
 app.get("/health", (_request, response) => {
