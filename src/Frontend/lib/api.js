@@ -1,6 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:1234";
 
 export async function apiRequest(path, { method = "GET", token, body } = {}) {
+  console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: {
@@ -25,7 +26,7 @@ export async function apiRequest(path, { method = "GET", token, body } = {}) {
     }
   }
 
-  console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+  
 
   if (!response.ok) {
     throw new Error(data.message || "Request failed.");
