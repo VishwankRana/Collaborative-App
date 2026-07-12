@@ -882,14 +882,16 @@ textarea::placeholder,
 /* Language selector */
 .interview-language-select,
 .interview-language-readonly {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.interview-language-select span,
-.interview-language-readonly span {
-  display: none;
+.interview-language-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .lang-select-wrap {
@@ -925,7 +927,7 @@ textarea::placeholder,
   background: var(--lang-cpp);
 }
 
-.lang-select-wrap select,
+.interview-lang-select,
 .interview-language-readonly strong {
   background: var(--bg-elevated);
   border: 1px solid var(--border-default);
@@ -934,6 +936,19 @@ textarea::placeholder,
   font-size: 13px;
   padding: 6px 28px 6px 26px;
   min-width: 140px;
+  cursor: pointer;
+  outline: none;
+  appearance: auto;
+}
+
+.interview-lang-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.interview-lang-select:hover:not(:disabled),
+.interview-lang-select:focus-visible {
+  border-color: var(--accent-primary);
 }
 
 .interview-language-readonly strong {

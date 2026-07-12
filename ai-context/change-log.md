@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-07-12 — Language selector visibility & room language change
+
+- **Timestamp:** 2026-07-12
+- **Files changed:** `src/Frontend/components/LanguageSelector.jsx`, `src/Frontend/pages/CreateInterviewRoomPage.jsx`, `src/Frontend/pages/InterviewRoomPage.jsx`, `src/Frontend/styles/codescreen.css`, `src/Backend/socket/roomHandler.js`
+- **Summary of change:** Fixed CSS that hid the language dropdown; moved language picker higher on create-interview form; added visible Language label in interview room top bar; allowed both interviewer and candidate to change room language while session is active.
+- **Impacted modules:** Interview create flow, interview room UI, socket room handler
+- **Risk level:** Low
+
 ## 2026-06-21 — GitHub README
 
 - **Timestamp:** 2026-06-21

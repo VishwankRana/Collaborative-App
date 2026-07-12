@@ -297,6 +297,11 @@ export default function CreateInterviewRoomPage() {
             />
           </label>
 
+          <div className="interview-form-field">
+            <span>Language</span>
+            <LanguageSelector showLabel={false} value={language} onChange={setLanguage} />
+          </div>
+
           <label className="interview-form-field">
             <span>Problem</span>
             <input
@@ -348,11 +353,6 @@ export default function CreateInterviewRoomPage() {
               rows={3}
             />
           </label>
-
-          <div className="interview-form-field">
-            <span>Language</span>
-            <LanguageSelector value={language} onChange={setLanguage} />
-          </div>
 
           {!showTestCases ? (
             <button className="btn-ghost" type="button" onClick={() => setShowTestCases(true)}>

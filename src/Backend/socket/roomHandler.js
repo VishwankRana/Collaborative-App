@@ -173,7 +173,7 @@ export function registerRoomHandlers(io) {
 
         const auth = await authorizeRoomSocket(socket, roomId);
 
-        if (!auth || auth.role !== "interviewer") {
+        if (!auth || auth.room.status === "ended") {
           return;
         }
 

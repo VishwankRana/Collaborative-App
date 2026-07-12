@@ -303,12 +303,10 @@ export default function InterviewRoomPage() {
     );
     setLanguageMessage("");
 
-    if (roomState.role === "interviewer") {
-      getInterviewSocket(token).emit("language:change", {
-        roomId: roomState.id,
-        language: nextLanguage,
-      });
-    }
+    getInterviewSocket(token).emit("language:change", {
+      roomId: roomState.id,
+      language: nextLanguage,
+    });
   }
 
   function handleRunCode() {
@@ -450,7 +448,7 @@ export default function InterviewRoomPage() {
   }
 
   const readOnly = roomState.status === "ended";
-  const canChangeLanguage = roomState.role === "interviewer" && !readOnly;
+  const canChangeLanguage = !readOnly;
   const canRunCode = !readOnly;
   const hasTestCases = (roomState.testCases?.length || 0) > 0;
   const roomTitle = roomState.candidate?.name
@@ -531,6 +529,7 @@ export default function InterviewRoomPage() {
                     <LanguageSelector
                       disabled={!canChangeLanguage}
                       readOnly={!canChangeLanguage}
+                      showLabel
                       value={language}
                       onChange={handleLanguageChange}
                     />

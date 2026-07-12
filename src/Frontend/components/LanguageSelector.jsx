@@ -12,32 +12,35 @@ export default function LanguageSelector({
   onChange,
   disabled = false,
   readOnly = false,
+  showLabel = false,
 }) {
   const dotClass = LANGUAGE_DOT_CLASS[value] || LANGUAGE_DOT_CLASS.javascript;
+  const selectedLabel =
+    INTERVIEW_LANGUAGES.find((option) => option.value === value)?.label || value;
 
   if (readOnly) {
-    const label =
-      INTERVIEW_LANGUAGES.find((option) => option.value === value)?.label || value;
-
     return (
       <div className="interview-language-readonly">
-        <span className="lang-select-wrap">
+        {showLabel ? <span className="interview-language-label">Language</span> : null}
+        <div className="lang-select-wrap">
           <span className={`lang-dot ${dotClass}`} aria-hidden="true" />
-          <strong>{label}</strong>
-        </span>
+          <strong>{selectedLabel}</strong>
+        </div>
       </div>
     );
   }
 
   return (
     <label className="interview-language-select">
-      <span className="lang-select-wrap">
+      {showLabel ? <span className="interview-language-label">Language</span> : null}
+      <div className="lang-select-wrap">
         <span className={`lang-dot ${dotClass}`} aria-hidden="true" />
         <select
-          className="role-select"
+          className="interview-lang-select"
           disabled={disabled}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          aria-label="Programming language"
         >
           {INTERVIEW_LANGUAGES.map((option) => (
             <option key={option.value} value={option.value}>
@@ -45,7 +48,7 @@ export default function LanguageSelector({
             </option>
           ))}
         </select>
-      </span>
+      </div>
     </label>
   );
 }
