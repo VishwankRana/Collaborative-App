@@ -1,7 +1,5 @@
 import { ChevronRight } from "lucide-react";
 
-import ChatPanel from "./ChatPanel";
-
 function getInitials(name) {
   if (!name) {
     return "?";
@@ -34,8 +32,6 @@ export default function ProblemPanel({
   problem = {},
   interviewer = null,
   candidate = null,
-  chatReadOnly = false,
-  roomId,
 }) {
   const examples = problem.examples || [];
   const difficulty = problem.difficulty
@@ -162,10 +158,6 @@ export default function ProblemPanel({
                 ))}
               </div>
             ) : null}
-          </div>
-
-          <div className="problem-chat-section">
-            <ChatPanel embedded readOnly={chatReadOnly} roomId={roomId} />
           </div>
         </>
       ) : null}

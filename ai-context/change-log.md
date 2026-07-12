@@ -1,5 +1,21 @@
 # Change Log
 
+## 2026-07-12 — Chat modal in top bar
+
+- **Timestamp:** 2026-07-12
+- **Files changed:** `src/Frontend/components/ChatModal.jsx`, `src/Frontend/components/ChatPanel.jsx`, `src/Frontend/components/ProblemPanel.jsx`, `src/Frontend/components/AppTopBar.jsx`, `src/Frontend/pages/InterviewRoomPage.jsx`, `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Moved interview chat out of the problem panel into a top-bar Chat button that opens a modal overlay; problem panel now shows only participants and problem details.
+- **Impacted modules:** Interview room UI, chat
+- **Risk level:** Low
+
+## 2026-07-12 — Rounded interview room buttons
+
+- **Timestamp:** 2026-07-12
+- **Files changed:** `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Updated primary, secondary, danger, ghost, icon, and language selector buttons to use pill-shaped full border radius in the interview room toolbar.
+- **Impacted modules:** Interview room UI, global CodeScreen buttons
+- **Risk level:** Low
+
 ## 2026-07-12 — Java driver fallback for legacy rooms
 
 - **Timestamp:** 2026-07-12

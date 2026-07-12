@@ -16,6 +16,7 @@ import {
 
 import { useAuth } from "../auth/useAuth.jsx";
 import AppTopBar from "../components/AppTopBar";
+import ChatModal from "../components/ChatModal";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import CollaborativeCodeEditor from "../components/CollaborativeCodeEditor";
 import ConnectionStatusBadge from "../components/ConnectionStatusBadge";
@@ -59,6 +60,7 @@ export default function InterviewRoomPage() {
   const [socketError, setSocketError] = useState("");
   const [collabStatus, setCollabStatus] = useState("connecting");
   const [copyInviteMessage, setCopyInviteMessage] = useState("");
+  const [showChatModal, setShowChatModal] = useState(false);
   const [runCount, setRunCount] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
 
@@ -506,11 +508,20 @@ export default function InterviewRoomPage() {
   return (
     <div className="cs-app">
       <AppTopBar
+        chatOpen={showChatModal}
         connectionStatus={collabStatus}
         roomStatus={roomState.status}
         roomTitle={roomTitle}
         showActiveDot={roomState.status === "active"}
         variant="room"
+        onChatClick={() => setShowChatModal((current) => !current)}
+      />
+
+      <ChatModal
+        open={showChatModal}
+        readOnly={readOnly}
+        roomId={roomState.id}
+        onClose={() => setShowChatModal(false)}
       />
 
       {cheatAlert ? (
@@ -549,11 +560,9 @@ export default function InterviewRoomPage() {
                 >
                   <ProblemPanel
                     candidate={roomState.candidate}
-                    chatReadOnly={readOnly}
                     collapsed={problemCollapsed}
                     interviewer={roomState.interviewer}
                     problem={roomState.problem}
-                    roomId={roomState.id}
                     onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
                   />
                 </div>
@@ -562,11 +571,9 @@ export default function InterviewRoomPage() {
             ) : (
               <ProblemPanel
                 candidate={roomState.candidate}
-                chatReadOnly={readOnly}
                 collapsed={problemCollapsed}
                 interviewer={roomState.interviewer}
                 problem={roomState.problem}
-                roomId={roomState.id}
                 onToggleCollapsed={() => setProblemCollapsed((current) => !current)}
               />
             )}

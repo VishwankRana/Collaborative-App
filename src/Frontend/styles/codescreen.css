@@ -122,10 +122,10 @@
   background: var(--accent-primary);
   color: var(--text-primary);
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-weight: 500;
   font-size: 13px;
-  padding: 7px 14px;
+  padding: 7px 16px;
   cursor: pointer;
   transition: all 150ms ease;
   box-shadow: none;
@@ -165,10 +165,10 @@
   background: transparent;
   border: 1px solid var(--border-default);
   color: var(--text-primary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-weight: 500;
   font-size: 13px;
-  padding: 7px 14px;
+  padding: 7px 16px;
   cursor: pointer;
   transition: all 150ms ease;
   text-transform: none;
@@ -192,10 +192,10 @@
   background: var(--error-subtle);
   border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
   color: var(--error);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-weight: 500;
   font-size: 13px;
-  padding: 7px 14px;
+  padding: 7px 16px;
   cursor: pointer;
   transition: all 150ms ease;
 }
@@ -208,10 +208,10 @@
   background: transparent;
   border: 0;
   color: var(--text-secondary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   font-weight: 500;
   font-size: 13px;
-  padding: 7px 14px;
+  padding: 7px 16px;
   cursor: pointer;
   transition: all 150ms ease;
 }
@@ -228,6 +228,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-full);
 }
 
 .hero-link-button.is-active {
@@ -931,7 +932,7 @@ textarea::placeholder,
 .interview-language-readonly strong {
   background: var(--bg-elevated);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   color: var(--text-primary);
   font-size: 13px;
   padding: 6px 28px 6px 26px;
@@ -1747,6 +1748,68 @@ body.cs-resize-active--vertical {
   font-size: 13px;
   border: 0;
   background: transparent;
+}
+
+.cs-topbar-chat-btn.is-active {
+  background: var(--accent-subtle);
+  border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  color: var(--accent-primary);
+}
+
+/* Chat modal */
+.cs-chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: calc(52px + var(--space-4)) var(--space-4) var(--space-4);
+  pointer-events: none;
+}
+
+.cs-chat-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--bg-base) 55%, transparent);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.cs-chat-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 480px);
+  height: min(560px, calc(100vh - 96px));
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  animation: cs-dropdown-in 200ms ease;
+}
+
+.interview-chat-panel--modal {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.interview-chat-panel--modal .interview-chat-header::before {
+  display: none;
+}
+
+.interview-chat-panel--modal .chat-header-title {
+  display: flex;
+}
+
+.interview-chat-panel--modal .interview-chat-messages {
+  flex: 1;
+  min-height: 0;
 }
 
 /* End dialog */

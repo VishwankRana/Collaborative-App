@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { MessageSquare } from "lucide-react";
 
 import { useAuth } from "../auth/useAuth.jsx";
 import ConnectionStatusBadge from "./ConnectionStatusBadge";
+import IconLabel from "./IconLabel";
 
 function getInitials(name) {
   if (!name) {
@@ -22,6 +24,8 @@ export default function AppTopBar({
   roomTitle,
   showActiveDot = false,
   variant = "default",
+  onChatClick,
+  chatOpen = false,
 }) {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -81,6 +85,19 @@ export default function AppTopBar({
       ) : null}
 
       <div className="cs-topbar-right">
+        {variant === "room" && onChatClick ? (
+          <button
+            type="button"
+            className={`btn-secondary cs-topbar-chat-btn${chatOpen ? " is-active" : ""}`}
+            aria-expanded={chatOpen}
+            onClick={onChatClick}
+          >
+            <IconLabel icon={MessageSquare} size={16}>
+              Chat
+            </IconLabel>
+          </button>
+        ) : null}
+
         {connectionStatus ? <ConnectionStatusBadge status={connectionStatus} /> : null}
 
         <div className="cs-user-menu" ref={menuRef}>

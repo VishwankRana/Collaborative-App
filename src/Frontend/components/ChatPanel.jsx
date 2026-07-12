@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowRight, MessageSquare } from "lucide-react";
+import { ArrowRight, MessageSquare, X } from "lucide-react";
 
 import { getInterviewSocket } from "../lib/interviewSocket";
 import IconLabel from "./IconLabel";
@@ -25,7 +25,13 @@ function getInitials(name) {
     .join("");
 }
 
-export default function ChatPanel({ roomId, readOnly = false, embedded = false }) {
+export default function ChatPanel({
+  roomId,
+  readOnly = false,
+  embedded = false,
+  modal = false,
+  onClose,
+}) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const messagesEndRef = useRef(null);
@@ -80,7 +86,9 @@ export default function ChatPanel({ roomId, readOnly = false, embedded = false }
 
   return (
     <section
-      className={`interview-chat-panel${embedded ? " interview-chat-panel--embedded" : ""}`}
+      className={`interview-chat-panel${
+        embedded ? " interview-chat-panel--embedded" : ""
+      }${modal ? " interview-chat-panel--modal" : ""}`}
     >
       <div className="interview-chat-header">
         <span className="chat-header-title">
@@ -88,7 +96,19 @@ export default function ChatPanel({ roomId, readOnly = false, embedded = false }
             Chat
           </IconLabel>
         </span>
-        {!embedded ? <span className="comment-count">{messages.length}</span> : null}
+        <div className="interview-chat-header-actions">
+          {!embedded && !modal ? <span className="comment-count">{messages.length}</span> : null}
+          {modal && onClose ? (
+            <button
+              type="button"
+              className="btn-ghost btn-icon"
+              aria-label="Close chat"
+              onClick={onClose}
+            >
+              <X size={16} strokeWidth={1.5} />
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div
