@@ -137,10 +137,16 @@ export function buildDriverProgram({ language, userCode, problem, args = [] }) {
   const template = loadTemplate(language);
   const functionName = getFunctionNameForLanguage(problem, language);
   const normalizedArgs = Array.isArray(args) ? args : [];
+  const sanitizedUserCode =
+    language === "java"
+      ? userCode
+          .replace(/\bpublic\s+class\s+Solution\b/g, "class Solution")
+          .replace(/\bpublic\s+class\s+Main\b/g, "class Main")
+      : userCode;
 
   if (language === "javascript" || language === "python") {
     return renderTemplate(template, {
-      USER_CODE: userCode,
+      USER_CODE: sanitizedUserCode,
       FUNCTION_NAME: functionName,
       ARGS_JSON: JSON.stringify(normalizedArgs),
     });
@@ -150,7 +156,7 @@ export function buildDriverProgram({ language, userCode, problem, args = [] }) {
     const javaParts = buildJavaDeclarations(problem, normalizedArgs, functionName);
 
     return renderTemplate(template, {
-      USER_CODE: userCode,
+      USER_CODE: sanitizedUserCode,
       ...javaParts,
     });
   }
@@ -159,7 +165,7 @@ export function buildDriverProgram({ language, userCode, problem, args = [] }) {
     const cppParts = buildCppDeclarations(problem, normalizedArgs, functionName);
 
     return renderTemplate(template, {
-      USER_CODE: userCode,
+      USER_CODE: sanitizedUserCode,
       ...cppParts,
     });
   }

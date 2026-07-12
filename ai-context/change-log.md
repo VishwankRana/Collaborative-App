@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-07-12 — Java driver fallback for legacy rooms
+
+- **Timestamp:** 2026-07-12
+- **Files changed:** `src/Backend/execution/legacyConverter.js`, `src/Backend/execution/problemContext.js`, `src/Backend/execution/testRunner.js`, `src/Backend/execution/driverBuilder.js`, `src/Backend/routes/rooms.js`, `src/Backend/socket/roomHandler.js`
+- **Summary of change:** Fixed Java "No public class found to execute" by resolving execution profiles from problem title for older rooms, converting legacy stdin test cases to structured args, and always wrapping Java/C++ solutions with the public Main driver. Sanitized user code to avoid duplicate public classes.
+- **Impacted modules:** Code execution, interview room run/submit
+- **Risk level:** Medium
+
 ## 2026-07-12 — LeetCode-style code execution drivers
 
 - **Timestamp:** 2026-07-12

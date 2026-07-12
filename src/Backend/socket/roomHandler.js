@@ -4,11 +4,11 @@ import InterviewRoom from "../models/InterviewRoom.js";
 import RecordingEvent from "../models/RecordingEvent.js";
 import CheatLog from "../models/CheatLog.js";
 import User from "../models/User.js";
-import { getProblemExecutionContext } from "../execution/problemContext.js";
 import {
   getSampleTestCase,
   runTestCase,
 } from "../execution/testRunner.js";
+import { resolveProblemExecutionContext } from "../execution/legacyConverter.js";
 import { executeCode } from "../services/codeExecution.js";
 
 const VALID_LANGUAGES = new Set(["javascript", "python", "java", "cpp"]);
@@ -224,19 +224,19 @@ export function registerRoomHandlers(io) {
 
         const resolvedLanguage = language || auth.room.language;
         const resolvedCode = code || "";
-        const problem = getProblemExecutionContext(auth.room);
         const sampleCase = getSampleTestCase(auth.room.testCases || []);
+        const executionProblem = resolveProblemExecutionContext(auth.room);
 
         io.to(getRoomChannel(roomId)).emit("code:running", { roomId });
 
         try {
           let result;
 
-          if (sampleCase && problem.functionName) {
+          if (sampleCase && executionProblem.functionName) {
             const testResult = await runTestCase({
               language: resolvedLanguage,
               userCode: resolvedCode,
-              problem,
+              problem: auth.room.problem || {},
               testCase: sampleCase,
             });
 

@@ -496,7 +496,9 @@ export default function InterviewRoomPage() {
   const canChangeLanguage = !readOnly;
   const canRunCode = !readOnly;
   const hasTestCases = (roomState.testCases?.length || 0) > 0;
-  const usesDriver = Boolean(roomState.problem?.functionName);
+  const usesDriver =
+    Boolean(roomState.problem?.functionName) ||
+    Boolean(roomState.problem?.title);
   const roomTitle = roomState.candidate?.name
     ? `${roomState.title} – ${roomState.candidate.name}`
     : roomState.title;

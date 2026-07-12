@@ -13,7 +13,6 @@ import {
   serializeRoom,
 } from "../interviewRooms.js";
 import { stopInterviewSnapshotTimer } from "../interviewSnapshots.js";
-import { getProblemExecutionContext } from "../execution/problemContext.js";
 import {
   getSampleTestCase,
   runTestCase,
@@ -222,7 +221,6 @@ export function createRoomsRouter(authenticateRequest) {
       }
 
       const resolvedLanguage = language || room.language;
-      const problem = getProblemExecutionContext(room);
       const visibleCases = (room.testCases || []).filter((testCase) => !testCase.isHidden);
       const sampleCase =
         testCaseIndex !== undefined
@@ -237,7 +235,7 @@ export function createRoomsRouter(authenticateRequest) {
       const result = await runTestCase({
         language: resolvedLanguage,
         userCode: code,
-        problem,
+        problem: room.problem || {},
         testCase: sampleCase,
       });
 
@@ -282,7 +280,6 @@ export function createRoomsRouter(authenticateRequest) {
       }
 
       const resolvedLanguage = language || room.language;
-      const problem = getProblemExecutionContext(room);
       const visibleCases = (room.testCases || []).filter((testCase) => !testCase.isHidden);
 
       if (visibleCases.length === 0) {
@@ -293,7 +290,7 @@ export function createRoomsRouter(authenticateRequest) {
       const summary = await runTestCases({
         language: resolvedLanguage,
         userCode: code,
-        problem,
+        problem: room.problem || {},
         testCases: visibleCases,
       });
 
@@ -340,7 +337,6 @@ export function createRoomsRouter(authenticateRequest) {
       }
 
       const resolvedLanguage = language || room.language;
-      const problem = getProblemExecutionContext(room);
       const allCases = room.testCases || [];
 
       if (allCases.length === 0) {
@@ -357,7 +353,7 @@ export function createRoomsRouter(authenticateRequest) {
       const summary = await runTestCases({
         language: resolvedLanguage,
         userCode: code,
-        problem,
+        problem: room.problem || {},
         testCases: allCases,
         options: {
           stopOnFailure,

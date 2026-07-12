@@ -1,5 +1,10 @@
 import { executeCode } from "../services/codeExecution.js";
 import { buildDriverProgram } from "./driverBuilder.js";
+import {
+  enrichTestCase,
+  resolveProblemExecutionContext,
+  sanitizeUserCode,
+} from "./legacyConverter.js";
 import { hasDriverMetadata } from "./problemMetadata.js";
 import { outputsMatch } from "./outputCompare.js";
 import {
@@ -8,28 +13,48 @@ import {
 } from "./valueFormatter.js";
 
 export function normalizeTestCase(testCase = {}, problem = {}) {
-  if (Array.isArray(testCase.args)) {
+  const enriched = enrichTestCase(testCase, problem);
+
+  if (Array.isArray(enriched.args)) {
+    const executionProblem = resolveProblemExecutionContext({ problem });
+
     return {
-      args: testCase.args,
-      expected: testCase.expected ?? testCase.expectedOutput,
-      isHidden: Boolean(testCase.isHidden),
+      args: enriched.args,
+      expected: enriched.expected ?? enriched.expectedOutput,
+      isHidden: Boolean(enriched.isHidden),
       input:
-        testCase.input ||
-        formatArgsForDisplay(problem, testCase.args),
+        enriched.input ||
+        formatArgsForDisplay(executionProblem, enriched.args),
       expectedOutput:
-        testCase.expectedOutput ||
-        formatExpectedOutput(testCase.expected ?? testCase.expectedOutput),
+        enriched.expectedOutput ||
+        formatExpectedOutput(enriched.expected ?? enriched.expectedOutput),
     };
   }
 
   return {
     args: null,
-    expected: testCase.expectedOutput,
-    isHidden: Boolean(testCase.isHidden),
-    input: testCase.input || "",
-    expectedOutput: testCase.expectedOutput || "",
+    expected: enriched.expectedOutput,
+    isHidden: Boolean(enriched.isHidden),
+    input: enriched.input || "",
+    expectedOutput: enriched.expectedOutput || "",
     legacy: true,
   };
+}
+
+function shouldUseDriver(language, problem, normalized) {
+  if (!hasDriverMetadata(problem)) {
+    return false;
+  }
+
+  if (!Array.isArray(normalized.args)) {
+    return false;
+  }
+
+  if (language === "java" || language === "cpp") {
+    return true;
+  }
+
+  return true;
 }
 
 export async function runTestCase({
@@ -38,44 +63,50 @@ export async function runTestCase({
   problem = {},
   testCase = {},
 }) {
+  const executionProblem = resolveProblemExecutionContext({ problem });
   const normalized = normalizeTestCase(testCase, problem);
+  const sanitizedCode = sanitizeUserCode(language, userCode);
 
-  if (hasDriverMetadata(problem) && Array.isArray(normalized.args)) {
+  if (shouldUseDriver(language, executionProblem, normalized)) {
     const program = buildDriverProgram({
       language,
-      userCode,
-      problem,
+      userCode: sanitizedCode,
+      problem: executionProblem,
       args: normalized.args,
     });
 
     const result = await executeCode(language, program, "");
     const actualOutput = result.stdout.trim();
+    const stderr = result.stderr?.trim() || "";
     const passed =
       result.exitCode === 0 &&
-      !result.stderr?.trim() &&
+      !stderr &&
       outputsMatch(actualOutput, normalized.expected);
 
     return {
       ...result,
       passed,
-      actualOutput,
+      actualOutput: stderr && !actualOutput ? stderr : actualOutput,
       expectedOutput: formatExpectedOutput(normalized.expected),
       input: normalized.input,
       isHidden: normalized.isHidden,
+      stderr,
     };
   }
 
-  const result = await executeCode(language, userCode, normalized.input || "");
+  const result = await executeCode(language, sanitizedCode, normalized.input || "");
   const actualOutput = result.stdout.trim();
+  const stderr = result.stderr?.trim() || "";
   const passed = actualOutput === String(normalized.expectedOutput || "").trim();
 
   return {
     ...result,
     passed,
-    actualOutput,
+    actualOutput: stderr && !actualOutput ? stderr : actualOutput,
     expectedOutput: normalized.expectedOutput,
     input: normalized.input,
     isHidden: normalized.isHidden,
+    stderr,
   };
 }
 
