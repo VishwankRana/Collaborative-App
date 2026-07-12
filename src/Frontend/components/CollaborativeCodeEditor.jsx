@@ -37,8 +37,10 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
   const starterAppliedRef = useRef(false);
   const previousLanguageRef = useRef(language);
   const starterCodeRef = useRef(starterCode);
+  const userRoleRef = useRef(userRole);
   const offlineToastTimeoutRef = useRef(null);
   const onCollabStatusChangeRef = useRef(onCollabStatusChange);
+  const editorDisposablesRef = useRef([]);
   const [showOfflineToast, setShowOfflineToast] = useState(false);
 
   useEffect(() => {
@@ -48,6 +50,64 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
   useEffect(() => {
     starterCodeRef.current = starterCode;
   }, [starterCode]);
+
+  useEffect(() => {
+    userRoleRef.current = userRole;
+  }, [userRole]);
+
+  const clearEditorDisposables = useCallback(() => {
+    editorDisposablesRef.current.forEach((disposable) => disposable.dispose?.());
+    editorDisposablesRef.current = [];
+  }, []);
+
+  const clearAwarenessSelection = useCallback(() => {
+    providerRef.current?.awareness.setLocalStateField("selection", null);
+  }, []);
+
+  const scheduleStarterSeed = useCallback(() => {
+    const provider = providerRef.current;
+    const ydoc = ydocRef.current;
+
+    if (!provider || !ydoc || starterAppliedRef.current) {
+      return;
+    }
+
+    const applySeed = () => {
+      if (starterAppliedRef.current) {
+        return;
+      }
+
+      starterAppliedRef.current = true;
+
+      const yText = ydoc.getText("code");
+
+      if (yText.length > 0) {
+        return;
+      }
+
+      if (userRoleRef.current !== "interviewer") {
+        return;
+      }
+
+      const template = getStarterCodeForLanguage(
+        language,
+        starterCodeRef.current
+      );
+
+      if (template) {
+        ydoc.transact(() => {
+          yText.insert(0, template);
+        });
+      }
+    };
+
+    if (provider.synced) {
+      applySeed();
+      return;
+    }
+
+    provider.once("synced", applySeed);
+  }, [language]);
 
   useEffect(() => {
     starterAppliedRef.current = false;
@@ -79,6 +139,7 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
 
     return () => {
       window.clearTimeout(offlineToastTimeoutRef.current);
+      clearEditorDisposables();
       detachConnectionListeners();
       detachCursorStyles();
       bindingRef.current?.destroy();
@@ -91,7 +152,7 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
       indexeddbProviderRef.current = null;
       editorRef.current = null;
     };
-  }, [roomId, userName, userRole]);
+  }, [clearEditorDisposables, roomId, userName, userRole]);
 
   useEffect(() => {
     providerRef.current?.awareness.setLocalStateField("user", {
@@ -162,27 +223,11 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
     },
   }));
 
-  const seedStarterCode = useCallback(() => {
-    const ydoc = ydocRef.current;
-
-    if (!ydoc || starterAppliedRef.current) {
-      return;
-    }
-
-    const yText = ydoc.getText("code");
-    const template = getStarterCodeForLanguage(language, starterCode);
-
-    if (yText.length === 0 && template) {
-      yText.insert(0, template);
-    }
-
-    starterAppliedRef.current = true;
-  }, [language, starterCode]);
-
   const handleEditorMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     applyCodescreenMonacoTheme(monaco);
+    clearEditorDisposables();
 
     bindingRef.current?.destroy();
 
@@ -200,13 +245,36 @@ const CollaborativeCodeEditor = forwardRef(function CollaborativeCodeEditor(
       return;
     }
 
-    seedStarterCode();
+    scheduleStarterSeed();
 
     bindingRef.current = new MonacoBinding(
       yText,
       model,
       new Set([editor]),
       provider.awareness
+    );
+
+    const blurDisposable = editor.onDidBlurEditorWidget(() => {
+      clearAwarenessSelection();
+    });
+
+    const handleOutsidePointer = (event) => {
+      const domNode = editor.getDomNode();
+
+      if (domNode && !domNode.contains(event.target)) {
+        clearAwarenessSelection();
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsidePointer, true);
+
+    editorDisposablesRef.current.push(
+      blurDisposable,
+      {
+        dispose: () => {
+          document.removeEventListener("mousedown", handleOutsidePointer, true);
+        },
+      }
     );
 
     onEditorMount?.(editor, monaco);

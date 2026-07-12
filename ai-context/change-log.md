@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-07-12 — Starter code on join & awareness cursor blur
+
+- **Timestamp:** 2026-07-12
+- **Files changed:** `src/Frontend/components/CollaborativeCodeEditor.jsx`
+- **Summary of change:** Defer starter-code seeding until Yjs websocket sync completes and only allow the interviewer to seed empty rooms, preventing duplicate starter code when candidates join. Clear collaborative cursor awareness when the editor loses focus or the user clicks outside the editor.
+- **Impacted modules:** Interview room collaborative editor
+- **Risk level:** Low
+
 ## 2026-07-12 — Language selector visibility & room language change
 
 - **Timestamp:** 2026-07-12
