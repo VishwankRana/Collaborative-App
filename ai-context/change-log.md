@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-07-12 — LeetCode-style code execution drivers
+
+- **Timestamp:** 2026-07-12
+- **Files changed:** `src/Backend/execution/**`, `src/Backend/models/Question.js`, `src/Backend/models/InterviewRoom.js`, `src/Backend/routes/rooms.js`, `src/Backend/socket/roomHandler.js`, `src/Backend/seed/problemExecutionProfiles.js`, `src/Backend/seed/questions.js`, `src/Backend/interviewRooms.js`, `src/Frontend/pages/InterviewRoomPage.jsx`, `src/Frontend/pages/CreateInterviewRoomPage.jsx`, `src/Frontend/components/CodeOutputPanel.jsx`, `src/Frontend/lib/questionBank.js`, `src/Frontend/lib/interview.js`, `src/Frontend/styles/codescreen.css`
+- **Summary of change:** Added language-specific driver templates that wrap candidate solutions before JDoodle execution. Problems now store function metadata and structured test cases (`args`/`expected`). Run Code uses the sample test case, Run Tests checks visible cases, and Submit runs all cases including hidden ones without exposing hidden inputs to candidates.
+- **Impacted modules:** Code execution, interview rooms, question bank seeding, interview room UI
+- **Risk level:** Medium
+
 ## 2026-07-12 — Starter code on join & awareness cursor blur
 
 - **Timestamp:** 2026-07-12

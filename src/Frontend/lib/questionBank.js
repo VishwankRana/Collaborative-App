@@ -58,9 +58,16 @@ export function questionToRoomPayload(question) {
     examples: question.examples || [],
     constraints: (question.constraints || []).join("\n"),
     starterCode: question.starterCode || {},
+    functionName: question.functionName || "",
+    className: question.className || "Solution",
+    functionNames: question.functionNames || {},
+    returnType: question.returnType || {},
+    parameters: question.parameters || [],
     testCases: (question.testCases || []).map((testCase) => ({
       input: testCase.input,
       expectedOutput: testCase.expectedOutput,
+      args: testCase.args ?? null,
+      expected: testCase.expected ?? null,
       isHidden: Boolean(testCase.isHidden),
     })),
   };

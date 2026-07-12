@@ -4,6 +4,11 @@ import InterviewRoom from "../models/InterviewRoom.js";
 import RecordingEvent from "../models/RecordingEvent.js";
 import CheatLog from "../models/CheatLog.js";
 import User from "../models/User.js";
+import { getProblemExecutionContext } from "../execution/problemContext.js";
+import {
+  getSampleTestCase,
+  runTestCase,
+} from "../execution/testRunner.js";
 import { executeCode } from "../services/codeExecution.js";
 
 const VALID_LANGUAGES = new Set(["javascript", "python", "java", "cpp"]);
@@ -219,12 +224,36 @@ export function registerRoomHandlers(io) {
 
         const resolvedLanguage = language || auth.room.language;
         const resolvedCode = code || "";
-        const resolvedStdin = stdin || "";
+        const problem = getProblemExecutionContext(auth.room);
+        const sampleCase = getSampleTestCase(auth.room.testCases || []);
 
         io.to(getRoomChannel(roomId)).emit("code:running", { roomId });
 
         try {
-          const result = await executeCode(resolvedLanguage, resolvedCode, resolvedStdin);
+          let result;
+
+          if (sampleCase && problem.functionName) {
+            const testResult = await runTestCase({
+              language: resolvedLanguage,
+              userCode: resolvedCode,
+              problem,
+              testCase: sampleCase,
+            });
+
+            result = {
+              stdout: testResult.actualOutput || "",
+              stderr: testResult.stderr || "",
+              exitCode: testResult.exitCode,
+              executionTime: testResult.executionTime,
+              timedOut: testResult.timedOut,
+              passed: testResult.passed,
+              expectedOutput: testResult.expectedOutput,
+              input: testResult.input,
+            };
+          } else {
+            const resolvedStdin = stdin || "";
+            result = await executeCode(resolvedLanguage, resolvedCode, resolvedStdin);
+          }
 
           io.to(getRoomChannel(roomId)).emit("code:result", {
             ...result,
@@ -240,11 +269,12 @@ export function registerRoomHandlers(io) {
             payload: {
               code: resolvedCode,
               language: resolvedLanguage,
-              stdin: resolvedStdin,
+              stdin: stdin || "",
               stdout: result.stdout,
               stderr: result.stderr,
               exitCode: result.exitCode,
               executionTime: result.executionTime,
+              passed: result.passed,
             },
           });
         } catch (executionError) {

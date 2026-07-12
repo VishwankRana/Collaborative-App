@@ -21,6 +21,24 @@ const problemExampleSchema = new mongoose.Schema(
   }
 );
 
+const parameterSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      default: "",
+    },
+    type: {
+      javascript: { type: String, default: "" },
+      python: { type: String, default: "" },
+      java: { type: String, default: "" },
+      cpp: { type: String, default: "" },
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const problemSchema = new mongoose.Schema(
   {
     title: {
@@ -45,6 +63,30 @@ const problemSchema = new mongoose.Schema(
       enum: ["easy", "medium", "hard", "Easy", "Medium", "Hard"],
       default: "medium",
     },
+    functionName: {
+      type: String,
+      default: "",
+    },
+    className: {
+      type: String,
+      default: "Solution",
+    },
+    functionNames: {
+      javascript: { type: String, default: "" },
+      python: { type: String, default: "" },
+      java: { type: String, default: "" },
+      cpp: { type: String, default: "" },
+    },
+    returnType: {
+      javascript: { type: String, default: "" },
+      python: { type: String, default: "" },
+      java: { type: String, default: "" },
+      cpp: { type: String, default: "" },
+    },
+    parameters: {
+      type: [parameterSchema],
+      default: [],
+    },
   },
   {
     _id: false,
@@ -60,6 +102,14 @@ const testCaseSchema = new mongoose.Schema(
     expectedOutput: {
       type: String,
       default: "",
+    },
+    args: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    expected: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
     isHidden: {
       type: Boolean,

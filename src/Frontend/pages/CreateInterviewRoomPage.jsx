@@ -31,6 +31,11 @@ function applyQuestionData(question, setters) {
   setters.setDifficulty(payload.difficulty);
   setters.setConstraints(payload.constraints);
   setters.setStarterCode(payload.starterCode);
+  setters.setFunctionName(payload.functionName || "");
+  setters.setClassName(payload.className || "Solution");
+  setters.setFunctionNames(payload.functionNames || {});
+  setters.setReturnType(payload.returnType || {});
+  setters.setParameters(payload.parameters || []);
   setters.setExamples(question.examples || []);
   setters.setTestCases(
     payload.testCases.length ? payload.testCases : [{ ...EMPTY_TEST_CASE }]
@@ -58,6 +63,11 @@ export default function CreateInterviewRoomPage() {
   const [difficulty, setDifficulty] = useState("medium");
   const [language, setLanguage] = useState("javascript");
   const [starterCode, setStarterCode] = useState({});
+  const [functionName, setFunctionName] = useState("");
+  const [className, setClassName] = useState("Solution");
+  const [functionNames, setFunctionNames] = useState({});
+  const [returnType, setReturnType] = useState({});
+  const [parameters, setParameters] = useState([]);
   const [examples, setExamples] = useState([]);
   const [testCases, setTestCases] = useState([{ ...EMPTY_TEST_CASE }]);
   const [showTestCases, setShowTestCases] = useState(false);
@@ -70,6 +80,11 @@ export default function CreateInterviewRoomPage() {
     setDifficulty,
     setConstraints,
     setStarterCode,
+    setFunctionName,
+    setClassName,
+    setFunctionNames,
+    setReturnType,
+    setParameters,
     setExamples,
     setTestCases,
     setShowTestCases,
@@ -181,6 +196,11 @@ export default function CreateInterviewRoomPage() {
             description: problemDescription.trim(),
             constraints: constraints.trim(),
             difficulty,
+            functionName: functionName.trim(),
+            className: className.trim() || "Solution",
+            functionNames,
+            returnType,
+            parameters,
             examples: (examples || []).map((example) => ({
               input: example.input || "",
               output: example.output || "",
@@ -188,7 +208,15 @@ export default function CreateInterviewRoomPage() {
             })),
           },
           starterCode: Object.keys(starterCode).length ? starterCode : undefined,
-          testCases: cleanedTestCases,
+          testCases: cleanedTestCases.map((testCase, index) => ({
+            ...testCase,
+            ...(testCases[index]?.args !== undefined && testCases[index]?.args !== null
+              ? { args: testCases[index].args }
+              : {}),
+            ...(testCases[index]?.expected !== undefined && testCases[index]?.expected !== null
+              ? { expected: testCases[index].expected }
+              : {}),
+          })),
         },
       });
 

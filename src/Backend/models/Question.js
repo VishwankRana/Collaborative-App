@@ -9,10 +9,25 @@ const exampleSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const parameterSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    type: {
+      javascript: { type: String, default: "" },
+      python: { type: String, default: "" },
+      java: { type: String, default: "" },
+      cpp: { type: String, default: "" },
+    },
+  },
+  { _id: false }
+);
+
 const testCaseSchema = new mongoose.Schema(
   {
     input: { type: String, default: "" },
     expectedOutput: { type: String, default: "" },
+    args: { type: mongoose.Schema.Types.Mixed, default: null },
+    expected: { type: mongoose.Schema.Types.Mixed, default: null },
     isHidden: { type: Boolean, default: false },
   },
   { _id: false }
@@ -25,6 +40,21 @@ const questionSchema = new mongoose.Schema({
   description: { type: String, required: true },
   examples: [exampleSchema],
   constraints: [{ type: String }],
+  functionName: { type: String, default: "" },
+  className: { type: String, default: "Solution" },
+  functionNames: {
+    javascript: { type: String, default: "" },
+    python: { type: String, default: "" },
+    java: { type: String, default: "" },
+    cpp: { type: String, default: "" },
+  },
+  returnType: {
+    javascript: { type: String, default: "" },
+    python: { type: String, default: "" },
+    java: { type: String, default: "" },
+    cpp: { type: String, default: "" },
+  },
+  parameters: [parameterSchema],
   starterCode: {
     javascript: { type: String, default: "" },
     python: { type: String, default: "" },

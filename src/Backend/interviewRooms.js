@@ -1,8 +1,8 @@
 export const DEFAULT_STARTER_CODE = {
-  javascript: "function solution(input) {\n  // Write your solution here\n}\n",
-  python: "def solution(input):\n    # Write your solution here\n    pass\n",
-  java: "public class Solution {\n    public static void main(String[] args) {\n        // Write your solution here\n    }\n}\n",
-  cpp: "#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}\n",
+  javascript: "function solution(nums) {\n  // Write your solution here\n}\n",
+  python: "def solution(nums):\n    # Write your solution here\n    pass\n",
+  java: "class Solution {\n    public int solution(int[] nums) {\n        \n    }\n}",
+  cpp: "#include <vector>\nusing namespace std;\n\nint solution(vector<int>& nums) {\n    \n}",
 };
 
 export function getYjsRoomName(roomId) {
@@ -42,21 +42,24 @@ function serializeUser(user) {
 function serializeTestCases(testCases, role) {
   const cases = testCases || [];
 
+  const mapCase = (testCase) => ({
+    input: testCase.input,
+    expectedOutput: testCase.expectedOutput,
+    args: testCase.args ?? null,
+    expected: testCase.expected ?? null,
+    isHidden: Boolean(testCase.isHidden),
+  });
+
   if (role === "candidate") {
     return cases
       .filter((testCase) => !testCase.isHidden)
       .map((testCase) => ({
-        input: testCase.input,
-        expectedOutput: testCase.expectedOutput,
+        ...mapCase(testCase),
         isHidden: false,
       }));
   }
 
-  return cases.map((testCase) => ({
-    input: testCase.input,
-    expectedOutput: testCase.expectedOutput,
-    isHidden: Boolean(testCase.isHidden),
-  }));
+  return cases.map(mapCase);
 }
 
 export function serializeRoom(room, role) {

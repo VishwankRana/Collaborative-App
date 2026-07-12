@@ -1,0 +1,43 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+{{USER_CODE}}
+
+string serializeJson(const string& value) {
+    return "\"" + value + "\"";
+}
+
+string serializeJson(bool value) {
+    return value ? "true" : "false";
+}
+
+string serializeJson(int value) {
+    return to_string(value);
+}
+
+string serializeJson(const vector<int>& values) {
+    string out = "[";
+    for (size_t i = 0; i < values.size(); i++) {
+        if (i > 0) out += ",";
+        out += to_string(values[i]);
+    }
+    out += "]";
+    return out;
+}
+
+string serializeJson(const vector<vector<int>>& values) {
+    string out = "[";
+    for (size_t i = 0; i < values.size(); i++) {
+        if (i > 0) out += ",";
+        out += serializeJson(values[i]);
+    }
+    out += "]";
+    return out;
+}
+
+int main() {
+    {{ARG_DECLARATIONS}}
+    {{RESULT_DECL}}
+    cout << serializeJson(__result);
+    return 0;
+}

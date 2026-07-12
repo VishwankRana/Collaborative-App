@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "../db.js";
 import Question from "../models/Question.js";
 import { SEED_QUESTIONS } from "./seedQuestionsData.js";
+import { enrichQuestionWithExecutionProfile } from "./problemExecutionProfiles.js";
 
 dotenv.config();
 
@@ -20,8 +21,9 @@ async function seed() {
       process.exit(0);
     }
 
-    await Question.insertMany(SEED_QUESTIONS);
-    console.log(`Seeded ${SEED_QUESTIONS.length} questions successfully.`);
+    const enrichedQuestions = SEED_QUESTIONS.map(enrichQuestionWithExecutionProfile);
+    await Question.insertMany(enrichedQuestions);
+    console.log(`Seeded ${enrichedQuestions.length} questions successfully.`);
     await mongoose.disconnect();
     process.exit(0);
   } catch (error) {

@@ -467,8 +467,8 @@ Merge all the linked-lists into one sorted linked-list and return it.`,
     starterCode: {
       javascript: `function mergeKLists(lists) {\n  \n}`,
       python:     `def merge_k_lists(lists):\n    pass`,
-      java:       `class Solution {\n    public ListNode mergeKLists(ListNode[] lists) {\n        \n    }\n}`,
-      cpp:        `ListNode* mergeKLists(vector<ListNode*>& lists) {\n    \n}`,
+      java:       `class Solution {\n    public int[] mergeKLists(int[][] lists) {\n        \n    }\n}`,
+      cpp:        `#include <vector>\nusing namespace std;\n\nvector<int> mergeKLists(vector<vector<int>>& lists) {\n    \n}`,
     },
     testCases: [
       { input: '1 4 5\n1 3 4\n2 6', expectedOutput: '1 1 2 3 4 4 5 6', isHidden: false },

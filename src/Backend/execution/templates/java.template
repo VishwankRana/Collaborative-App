@@ -1,0 +1,55 @@
+import java.util.*;
+
+{{USER_CODE}}
+
+public class Main {
+    static String serializeResult(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        if (value instanceof Boolean) {
+            return value.toString();
+        }
+        if (value instanceof Integer || value instanceof Long || value instanceof Double) {
+            return value.toString();
+        }
+        if (value instanceof String) {
+            return "\"" + ((String) value).replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        }
+        if (value instanceof int[]) {
+            int[] arr = (int[]) value;
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < arr.length; i++) {
+                if (i > 0) sb.append(",");
+                sb.append(arr[i]);
+            }
+            return sb.append("]").toString();
+        }
+        if (value instanceof int[][]) {
+            int[][] matrix = (int[][]) value;
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < matrix.length; i++) {
+                if (i > 0) sb.append(",");
+                sb.append(serializeResult(matrix[i]));
+            }
+            return sb.append("]").toString();
+        }
+        if (value instanceof List) {
+            List<?> list = (List<?>) value;
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(serializeResult(list.get(i)));
+            }
+            return sb.append("]").toString();
+        }
+        return value.toString();
+    }
+
+    public static void main(String[] args) {
+        Solution solution = new Solution();
+        {{ARG_DECLARATIONS}}
+        {{RESULT_DECL}}
+        System.out.print(serializeResult(__result));
+    }
+}

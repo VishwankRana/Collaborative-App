@@ -957,6 +957,27 @@ textarea::placeholder,
   font-weight: 500;
 }
 
+.code-output-meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.code-output-submit-summary {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(216, 90, 48, 0.12);
+  color: var(--accent-warm);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.code-output-submit-summary.is-accepted {
+  background: rgba(46, 125, 96, 0.14);
+  color: #2e7d60;
+}
+
 /* Interview room layout */
 .interview-room-shell {
   width: 100%;

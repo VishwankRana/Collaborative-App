@@ -21,9 +21,11 @@ export default function CodeOutputPanel({
   result = null,
   testCases = [],
   testResults = null,
+  submitSummary = null,
   stdin = "",
   onStdinChange,
   readOnly = false,
+  driverMode = false,
 }) {
   const [activeTab, setActiveTab] = useState("output");
   const hasTestCases = Array.isArray(testCases) && testCases.length > 0;
@@ -63,7 +65,7 @@ export default function CodeOutputPanel({
         </button>
       </div>
 
-      {!readOnly && activeTab === "output" ? (
+      {!readOnly && activeTab === "output" && !driverMode ? (
         <label className="code-output-stdin">
           <span>Standard input (optional)</span>
           <textarea
@@ -81,6 +83,16 @@ export default function CodeOutputPanel({
             {isRunningTests ? (
               <p className="code-output-running">
                 Running tests<span className="cs-running-dots" aria-hidden="true" />
+              </p>
+            ) : null}
+
+            {submitSummary ? (
+              <p className={`code-output-submit-summary${submitSummary.accepted ? " is-accepted" : ""}`}>
+                {submitSummary.accepted
+                  ? "Accepted"
+                  : `Failed ${submitSummary.totalCount - submitSummary.passedCount} of ${submitSummary.totalCount} test cases`}
+                {" · "}
+                {submitSummary.successRate}% passed
               </p>
             ) : null}
 
@@ -170,7 +182,17 @@ export default function CodeOutputPanel({
 
             {result ? (
               <div className="code-output-body">
-                {result.exitCode === 0 ? (
+                {result.passed !== undefined ? (
+                  <span
+                    className={`code-output-exit-badge ${
+                      result.passed
+                        ? "code-output-exit-badge--success"
+                        : "code-output-exit-badge--error"
+                    }`}
+                  >
+                    {result.passed ? "Passed" : "Failed"}
+                  </span>
+                ) : result.exitCode === 0 ? (
                   <span className="code-output-exit-badge code-output-exit-badge--success">
                     Exited {result.exitCode ?? 0}
                   </span>
@@ -180,7 +202,27 @@ export default function CodeOutputPanel({
                   </span>
                 )}
 
-                {result.stdout ? <pre>{result.stdout}</pre> : null}
+                {result.input ? (
+                  <p className="code-output-meta">
+                    <span>Input</span>
+                    <pre>{result.input}</pre>
+                  </p>
+                ) : null}
+
+                {result.stdout ? (
+                  <p className="code-output-meta">
+                    <span>Output</span>
+                    <pre>{result.stdout}</pre>
+                  </p>
+                ) : null}
+
+                {result.expectedOutput !== undefined && result.expectedOutput !== null ? (
+                  <p className="code-output-meta">
+                    <span>Expected</span>
+                    <pre>{result.expectedOutput}</pre>
+                  </p>
+                ) : null}
+
                 {result.stderr ? (
                   <pre className="code-output-stderr">{result.stderr}</pre>
                 ) : null}
@@ -197,7 +239,11 @@ export default function CodeOutputPanel({
             ) : !isRunning ? (
               <div className="code-output-idle-panel">
                 <Terminal size={32} strokeWidth={1.5} />
-                <p>Run your code to see output here</p>
+                <p>
+                  {driverMode
+                    ? "Run your solution against the sample test case"
+                    : "Run your code to see output here"}
+                </p>
                 {!readOnly ? (
                   <span className="code-output-shortcut">
                     <Command size={11} strokeWidth={1.5} />

@@ -13,7 +13,13 @@ import {
   serializeRoom,
 } from "../interviewRooms.js";
 import { stopInterviewSnapshotTimer } from "../interviewSnapshots.js";
-import { executeCode } from "../services/codeExecution.js";
+import { getProblemExecutionContext } from "../execution/problemContext.js";
+import {
+  getSampleTestCase,
+  runTestCase,
+  runTestCases,
+  serializeTestResult,
+} from "../execution/testRunner.js";
 
 function serializeRecordingEvent(event) {
   return {
@@ -187,6 +193,66 @@ export function createRoomsRouter(authenticateRequest) {
     }
   });
 
+  router.post("/:id/run-code", authenticateRequest, async (request, response) => {
+    try {
+      const room = await InterviewRoom.findById(request.params.id);
+
+      if (!room) {
+        response.status(404).json({ message: "Interview room not found." });
+        return;
+      }
+
+      const role = getRoomRole(room, request.user._id);
+
+      if (!role) {
+        response.status(403).json({ message: "You do not have access to this interview room." });
+        return;
+      }
+
+      if (room.status === "ended") {
+        response.status(400).json({ message: "This interview has already ended." });
+        return;
+      }
+
+      const { code, language, testCaseIndex } = request.body;
+
+      if (!code?.trim()) {
+        response.status(400).json({ message: "Code is required to run." });
+        return;
+      }
+
+      const resolvedLanguage = language || room.language;
+      const problem = getProblemExecutionContext(room);
+      const visibleCases = (room.testCases || []).filter((testCase) => !testCase.isHidden);
+      const sampleCase =
+        testCaseIndex !== undefined
+          ? visibleCases[Number(testCaseIndex)] || visibleCases[0]
+          : getSampleTestCase(room.testCases || []);
+
+      if (!sampleCase) {
+        response.status(400).json({ message: "No sample test case available for this room." });
+        return;
+      }
+
+      const result = await runTestCase({
+        language: resolvedLanguage,
+        userCode: code,
+        problem,
+        testCase: sampleCase,
+      });
+
+      response.json({
+        result: serializeTestResult(result, role),
+        passed: result.passed,
+      });
+    } catch (error) {
+      response.status(503).json({
+        message: "Unable to run code.",
+        detail: error.message,
+      });
+    }
+  });
+
   router.post("/:id/run-tests", authenticateRequest, async (request, response) => {
     try {
       const room = await InterviewRoom.findById(request.params.id);
@@ -216,43 +282,99 @@ export function createRoomsRouter(authenticateRequest) {
       }
 
       const resolvedLanguage = language || room.language;
-      const testCases = room.testCases || [];
+      const problem = getProblemExecutionContext(room);
+      const visibleCases = (room.testCases || []).filter((testCase) => !testCase.isHidden);
 
-      if (testCases.length === 0) {
-        response.json({ results: [] });
+      if (visibleCases.length === 0) {
+        response.json({ results: [], passedCount: 0, totalCount: 0, successRate: 0 });
         return;
       }
 
-      const results = await Promise.all(
-        testCases.map(async (testCase) => {
-          const result = await executeCode(resolvedLanguage, code, testCase.input || "");
-          const passed = result.stdout.trim() === (testCase.expectedOutput || "").trim();
+      const summary = await runTestCases({
+        language: resolvedLanguage,
+        userCode: code,
+        problem,
+        testCases: visibleCases,
+      });
 
-          const fullResult = {
-            input: testCase.input,
-            expectedOutput: testCase.expectedOutput,
-            actualOutput: result.stdout,
-            stderr: result.stderr,
-            exitCode: result.exitCode,
-            passed,
-            isHidden: Boolean(testCase.isHidden),
-          };
-
-          if (role === "candidate" && testCase.isHidden) {
-            return {
-              passed,
-              isHidden: true,
-            };
-          }
-
-          return fullResult;
-        })
-      );
-
-      response.json({ results });
+      response.json({
+        results: summary.results.map((result) => serializeTestResult(result, role)),
+        passedCount: summary.passedCount,
+        totalCount: summary.totalCount,
+        successRate: summary.successRate,
+      });
     } catch (error) {
       response.status(503).json({
         message: "Unable to run test cases.",
+        detail: error.message,
+      });
+    }
+  });
+
+  router.post("/:id/submit", authenticateRequest, async (request, response) => {
+    try {
+      const room = await InterviewRoom.findById(request.params.id);
+
+      if (!room) {
+        response.status(404).json({ message: "Interview room not found." });
+        return;
+      }
+
+      const role = getRoomRole(room, request.user._id);
+
+      if (!role) {
+        response.status(403).json({ message: "You do not have access to this interview room." });
+        return;
+      }
+
+      if (room.status === "ended") {
+        response.status(400).json({ message: "This interview has already ended." });
+        return;
+      }
+
+      const { code, language, stopOnFailure = true } = request.body;
+
+      if (!code?.trim()) {
+        response.status(400).json({ message: "Code is required to submit." });
+        return;
+      }
+
+      const resolvedLanguage = language || room.language;
+      const problem = getProblemExecutionContext(room);
+      const allCases = room.testCases || [];
+
+      if (allCases.length === 0) {
+        response.json({
+          results: [],
+          passedCount: 0,
+          totalCount: 0,
+          successRate: 0,
+          accepted: false,
+        });
+        return;
+      }
+
+      const summary = await runTestCases({
+        language: resolvedLanguage,
+        userCode: code,
+        problem,
+        testCases: allCases,
+        options: {
+          stopOnFailure,
+          includeHidden: true,
+        },
+      });
+
+      response.json({
+        results: summary.results.map((result) => serializeTestResult(result, role)),
+        passedCount: summary.passedCount,
+        totalCount: allCases.length,
+        successRate: Math.round((summary.passedCount / allCases.length) * 100),
+        accepted: summary.passedCount === allCases.length,
+      });
+    } catch (error) {
+      response.status(503).json({
+        message: "Unable to submit solution.",
         detail: error.message,
       });
     }

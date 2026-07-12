@@ -9,6 +9,7 @@ import {
   LogOut,
   Play,
   RefreshCw,
+  Send,
   StopCircle,
   X,
 } from "lucide-react";
@@ -44,8 +45,10 @@ export default function InterviewRoomPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState(null);
   const [testResults, setTestResults] = useState(null);
+  const [submitSummary, setSubmitSummary] = useState(null);
   const [runError, setRunError] = useState("");
   const [isRunningTests, setIsRunningTests] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [cheatAlert, setCheatAlert] = useState("");
   const [problemCollapsed, setProblemCollapsed] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
@@ -150,6 +153,7 @@ export default function InterviewRoomPage() {
       setIsRunning(true);
       setRunError("");
       setTestResults(null);
+      setSubmitSummary(null);
     };
 
     const handleCodeResult = (result) => {
@@ -318,6 +322,7 @@ export default function InterviewRoomPage() {
 
     setRunResult(null);
     setTestResults(null);
+    setSubmitSummary(null);
     setRunError("");
     setIsRunning(true);
 
@@ -343,6 +348,7 @@ export default function InterviewRoomPage() {
 
     setRunResult(null);
     setTestResults(null);
+    setSubmitSummary(null);
     setRunError("");
     setIsRunningTests(true);
 
@@ -358,6 +364,45 @@ export default function InterviewRoomPage() {
       setRunError(requestError.message);
     } finally {
       setIsRunningTests(false);
+    }
+  }
+
+  async function handleSubmit() {
+    if (!roomState || roomState.status === "ended" || isSubmitting || isRunning) {
+      return;
+    }
+
+    const code = editorRef.current?.getCode() || "";
+
+    if (!code.trim()) {
+      setRunError("Write some code before submitting.");
+      return;
+    }
+
+    setRunResult(null);
+    setTestResults(null);
+    setSubmitSummary(null);
+    setRunError("");
+    setIsSubmitting(true);
+
+    try {
+      const data = await apiRequest(`/api/rooms/${roomState.id}/submit`, {
+        method: "POST",
+        token,
+        body: { code, language, stopOnFailure: true },
+      });
+
+      setTestResults(data.results || []);
+      setSubmitSummary({
+        passedCount: data.passedCount,
+        totalCount: data.totalCount,
+        successRate: data.successRate,
+        accepted: data.accepted,
+      });
+    } catch (requestError) {
+      setRunError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -451,6 +496,7 @@ export default function InterviewRoomPage() {
   const canChangeLanguage = !readOnly;
   const canRunCode = !readOnly;
   const hasTestCases = (roomState.testCases?.length || 0) > 0;
+  const usesDriver = Boolean(roomState.problem?.functionName);
   const roomTitle = roomState.candidate?.name
     ? `${roomState.title} – ${roomState.candidate.name}`
     : roomState.title;
@@ -575,10 +621,22 @@ export default function InterviewRoomPage() {
                           <button
                             type="button"
                             className="btn-secondary"
-                            disabled={isRunningTests || isRunning}
+                            disabled={isRunningTests || isRunning || isSubmitting}
                             onClick={handleRunTests}
                           >
-                            {isRunningTests ? "Running tests..." : "Run tests"}
+                            {isRunningTests ? "Running tests..." : "Run Tests"}
+                          </button>
+                        ) : null}
+                        {hasTestCases ? (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            disabled={isSubmitting || isRunning || isRunningTests}
+                            onClick={handleSubmit}
+                          >
+                            <IconLabel icon={Send} size={16}>
+                              {isSubmitting ? "Submitting..." : "Submit"}
+                            </IconLabel>
                           </button>
                         ) : null}
                       </>
@@ -647,11 +705,13 @@ export default function InterviewRoomPage() {
                   style={{ height: `${outputResize.size}px` }}
                 >
                   <CodeOutputPanel
+                    driverMode={usesDriver}
                     isRunning={isRunning}
-                    isRunningTests={isRunningTests}
+                    isRunningTests={isRunningTests || isSubmitting}
                     readOnly={readOnly}
                     result={runResult}
                     stdin={stdin}
+                    submitSummary={submitSummary}
                     testCases={roomState.testCases || []}
                     testResults={testResults}
                     onStdinChange={setStdin}

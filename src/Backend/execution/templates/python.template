@@ -1,0 +1,7 @@
+{{USER_CODE}}
+
+import json
+
+__args = {{ARGS_JSON}}
+__result = {{FUNCTION_NAME}}(*__args)
+print(json.dumps(__result, separators=(',', ':')))

@@ -1,0 +1,5 @@
+{{USER_CODE}}
+
+const __args = {{ARGS_JSON}};
+const __result = {{FUNCTION_NAME}}(...__args);
+console.log(JSON.stringify(__result));
